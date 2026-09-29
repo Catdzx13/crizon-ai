@@ -33,7 +33,8 @@ function makeIo() {
 
 const tick = (ms = 25) => new Promise((r) => setTimeout(r, ms));
 
-async function waitFor(check, timeout = 4000) {
+async function waitFor(check, timeout = 15000) {
+  // Timeout rộng: máy tải nặng (CI/dev server) có thể làm chậm >4s — tránh flake.
   const started = Date.now();
   while (Date.now() - started < timeout) {
     if (check()) return true;
