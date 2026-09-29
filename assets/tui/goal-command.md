@@ -55,6 +55,8 @@ THỨ TỰ BẮT BUỘC:
 
 ĐIỀU KIỆN DỪNG (báo ngay cho người dùng):
 - Cần người dùng: đăng nhập tay, API key, mua dịch vụ, hoặc quyết định chính sách.
+- **Mơ hồ giữa nhiều hướng**: gọi tool `question` đưa 2–4 lựa chọn (kèm mô tả ngắn) rồi DỪNG chờ chọn —
+  không tự đoán; chỉ hỏi khi câu trả lời đổi hướng thực thi.
 - Kế hoạch có "gate" (ví dụ GĐ1 → GĐ2): không vượt gate khi chưa đạt acceptance.
 - Việc thất bại 2 lần liên tiếp, hoặc phát hiện rủi ro bảo mật.
 

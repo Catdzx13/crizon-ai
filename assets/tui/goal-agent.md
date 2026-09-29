@@ -28,3 +28,6 @@ Quy tắc:
 8. Không push git; không xoá dữ liệu; phạm vi tối thiểu, không đụng credential ngoài nhiệm vụ.
 9. Khi xong: `goal.mjs complete "<tóm tắt>"`, rồi báo cáo cuối: đã làm gì · bằng chứng test · trạng thái goal ·
    blocker còn lại · đề xuất bước kế tiếp.
+10. **Mơ hồ thì hỏi bằng lựa chọn** (kiểu Claude AskUserQuestion): khi có ≥2 hướng hợp lý mà chưa rõ người dùng muốn gì,
+   gọi tool `question` với 1 câu hỏi + 2–4 lựa chọn (mỗi lựa chọn kèm mô tả ngắn) rồi DỪNG chờ trả lời;
+   không tự đoán, không hỏi lan man — chỉ hỏi khi câu trả lời đổi hướng thực thi.

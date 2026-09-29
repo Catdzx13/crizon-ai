@@ -385,6 +385,18 @@
     ["\"Restore broken session\"", "\"Khôi phục phiên hỏng\""],
     ["\"Restore workspace\"", "\"Khôi phục workspace\""],
     ["\"Toggle export option\"", "\"Bật/tắt tuỳ chọn xuất\""],
+    ["\"Select answer\"", "\"Chọn câu trả lời\""],
+    ["\"Submit answer\"", "\"Gửi câu trả lời\""],
+    ["\"Submit answer edit\"", "\"Gửi chỉnh sửa câu trả lời\""],
+    ["\"Clear answer edit\"", "\"Xoá chỉnh sửa câu trả lời\""],
+    ["\"Cancel answer edit\"", "\"Huỷ chỉnh sửa câu trả lời\""],
+    ["\"Reject question\"", "\"Từ chối trả lời\""],
+    ["\"Previous question\"", "\"Câu hỏi trước\""],
+    ["\"Next question\"", "\"Câu hỏi kế tiếp\""],
+    ["\"Previous answer\"", "\"Câu trả lời trước\""],
+    ["\"Next answer\"", "\"Câu trả lời kế tiếp\""],
+    ["group: \"Question\"", "group: \"Hỏi đáp\""],
+    ["\"ANSWER\"", "\"TRẢ LỜI\""],
     ["Use ", "Dùng ", "packages/tui/src/"]
   ]
 }
