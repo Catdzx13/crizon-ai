@@ -1,270 +1,130 @@
-# crizon-ai — CLI dùng API AI Crizon
+<div align="center">
 
-Gọi API AI của CrizonShop từ terminal (OpenAI-compatible: `/v1/models`, `/v1/chat/completions`).
-Zero dependency — chỉ cần **Node.js ≥ 20**.
+# Crizon AI CLI
+
+**Trợ lý AI của CrizonShop ngay trong terminal — cài 1 lệnh, chạy 1 lệnh.**
+
+[![Release](https://img.shields.io/github/v/release/Catdzx13/crizon-ai?label=release&color=2563eb)](https://github.com/Catdzx13/crizon-ai/releases/latest)
+[![Platforms](https://img.shields.io/badge/n%E1%BB%81n%20t%E1%BA%A3ng-Windows%20%7C%20macOS%20%7C%20Linux-16a34a)](#n%E1%BB%81n-t%E1%BA%A3ng-h%E1%BB%97-tr%E1%BB%A3)
+[![Node](https://img.shields.io/badge/node-%E2%89%A520-339933?logo=node.js&logoColor=white)](https://nodejs.org)
+[![License](https://img.shields.io/badge/license-MIT-6b7280)](LICENSE)
+
+</div>
+
+---
 
 ## Cài đặt
 
 ```bash
-# 1 lệnh cài — dùng ngay từ GitHub:
+# 1 lệnh cài
 npm i -g github:Catdzx13/crizon-ai
 
-# (sau khi phát hành npm) hoặc:
-npm i -g crizon-ai
-
-# 1 lệnh khởi động: TUI Crizon (tự tải binary ~138 MB lần đầu; Windows/macOS/Linux x64+arm64)
+# 1 lệnh khởi động — TUI Crizon (tự tải binary theo hệ điều hành lần đầu)
 crizon-ai tui
-
-# hoặc chat nhẹ ngay trong terminal (không cần binary)
-crizon-ai
 ```
 
-- `crizon-ai` = CLI nhẹ (chat/ask/models/setup — chạy ngay, không cần tải gì thêm).
-- `crizon-ai tui` = TUI Crizon đầy đủ (tự tải binary từ GitHub Releases vào `~/.crizon-ai/bin`).
-- Nền tảng khác chưa có binary phát hành — tự build: `node tools/build-tui.mjs`.
+> Chưa có key? Gõ `crizon-ai portal` để mở trang tạo key, hoặc `crizon-ai login --web`.
+
+## Tính năng
+
+- **TUI Crizon** — giao diện chat/lập trình trong terminal, việt hoá toàn bộ, logo & thương hiệu Crizon.
+- **Goal loop `/goal`** — giao việc theo mục tiêu: kế hoạch + tiêu chí nghiệm thu, todo ngay trong phiên, ngân sách thời gian/token/bước, tự chạy lệnh kiểm chứng.
+- **Mức tư duy theo model** — `tắt · nhanh · cân-bằng · sâu` (đổi nhanh bằng `ctrl+t`).
+- **1 key dùng mọi model** — không khoá model theo key; chọn model ngay trong CLI (`crizon-ai models`, `/model`, `--model <id>`).
+- **1 key dùng cho nhiều CLI** — kết nối Claude Code, Codex, TUI Crizon, Aider, Qwen bằng cùng một API key Crizon.
+- **CLI nhẹ (zero-dep)** — `chat`, `ask`, `models`, `logs`, `roles`, wizard lần đầu, i18n vi/en.
+- **Tự tải binary** — `crizon-ai tui` tải bản đúng hệ điều hành từ GitHub Releases vào `~/.crizon-ai/bin`.
 
 ## Bắt đầu nhanh
 
 ```bash
-# Lần đầu: gõ "crizon-ai" — wizard 3 bước (ngôn ngữ → key → kiểu dùng) rồi vào chat luôn
-crizon-ai
-
-# Hoặc thủ công:
-crizon-ai login --key czn_xxxxxxxxxxxx   # lưu key (portal: /dashboard → API Keys)
-crizon-ai models                         # danh sách model (động theo key)
-crizon-ai ask "Viết giúp tôi email xác nhận đơn hàng"
-crizon-ai chat
+crizon-ai                      # wizard 3 bước (ngôn ngữ → key → kiểu dùng) rồi vào chat
+crizon-ai login --key czn_...  # hoặc lưu key thủ công
+crizon-ai models               # danh sách model khả dụng theo key
+crizon-ai ask "Tóm tắt giúp tôi đơn hàng #1024"
+crizon-ai chat                 # phiên chat dài, tự lưu lịch sử
 ```
 
 ## Lệnh
 
 | Lệnh | Mô tả |
 |---|---|
-| `crizon-ai` | Lần đầu: wizard (ngôn ngữ/key/kiểu dùng). Đã cấu hình: vào chat ngay |
-| `login [--key czn_...] [--web]` | Lưu key vào `~/.crizon-ai.json` (quyền 600) và kiểm tra kết nối. Không có `--key`: hiện **link tạo key** trên portal (`--web`: tự mở trình duyệt) |
-| `portal` | Mở trang **tạo API key** trên portal (`/dashboard?view=keys`) |
-| `tui [--bin <path>]` | Mở **TUI Crizon** với config/key thật (không mock); tham số sau `--` chuyển tiếp cho TUI |
-| `logout` | Xoá key đã lưu |
-| `config [--check]` | Xem base URL / key (che) / model / ngôn ngữ / đường dẫn config; `--check` kiểm tra kết nối |
-| `models [--json]` | Danh sách model theo quyền của key |
-| `ask "..."` | Hỏi một câu — stream + render markdown; `--no-stream`, `--json`, `--model`, `--system`, `--role`, `--temperature`, `--max-tokens` |
-| `chat [--session <tên>]` | REPL hội thoại (tự lưu/lấy lại phiên): `/model` (picker động), `/system`, `/clear`, `/settings`, `/exit` |
-| `settings` | Panel cài đặt: Ngôn ngữ · API key · Model · **Kết nối agent** · Doctor |
-| `language [vi\|en]` | Đổi ngôn ngữ CLI (lưu config; trong chat dùng `/language`) |
-| `setup claude\|codex\|tui\|aider\|qwen` | Kết nối harness: preflight gateway → ghi env (600) + khối marker vào shell profile (có backup) — model chạy qua API Crizon |
-| `disconnect <harness>` | Ngắt kết nối: gỡ đúng khối marker + xoá file env |
-| `doctor [--json]` | Kiểm tra CLI/config/gateway/key/model/harness/**kết nối**/**hỗ trợ `/v1/messages`,`/v1/responses`** |
-| `logs [--limit N] [--clear] [--json]` | Xem lịch sử hỏi đáp cục bộ (`~/.crizon-ai/logs.jsonl`) |
-| `roles [list\|add\|rm]` | Quản lý role (system prompt tái sử dụng), dùng với `ask --role <tên>` |
-| `env [--shell powershell]` | In `OPENAI_BASE_URL`/`OPENAI_API_KEY` cho Codex CLI & client OpenAI-compatible |
+| `crizon-ai` | Vào chat ngay (lần đầu chạy wizard) |
+| `crizon-ai tui` | Mở **TUI Crizon** (tự tải binary lần đầu) |
+| `crizon-ai login [--key czn_…] [--web]` | Lưu API key + kiểm tra kết nối |
+| `crizon-ai portal` | Mở trang tạo API key trên portal |
+| `crizon-ai models [--json]` | Danh sách model theo key |
+| `crizon-ai ask "…"` | Hỏi một câu (stream + markdown) |
+| `crizon-ai chat [--session <tên>]` | Phiên chat nhiều lượt |
+| `crizon-ai setup claude\|codex\|tui\|aider\|qwen` | Kết nối CLI/harness với API Crizon |
+| `crizon-ai doctor` | Chẩn đoán kết nối, key, model, harness |
+| `crizon-ai logs` · `roles` · `settings` · `config` · `logout` | Nhật ký · system prompt tái sử dụng · cài đặt · cấu hình |
 
-### Goal loop (`/goal`) — tính năng Crizon trong TUI
+## Nền tảng hỗ trợ
 
-`crizon-ai setup tui` cài thêm lệnh **`/goal`** + agent **`goal-runner`** (TUI gốc không có sẵn tính năng này):
+`crizon-ai tui` tự tải đúng binary cho máy bạn:
 
-- `/goal <mục tiêu>` — tạo/tiếp tục vòng mục tiêu **plan-first**: tiêu chí nghiệm thu (`accept add`) + việc nhỏ kèm lệnh kiểm chứng (`item add --verify`), tối đa 20 bước
-- Tiến độ hiển thị trong TUI qua tool `todowrite` → **thanh nhiệm vụ ở sidebar Todo** (`[✓]` xong · `[•]` đang làm · `[ ]` chờ; mở sidebar bằng phím tắt `session.sidebar.toggle`); `/goal` chạy ở phiên chính nên task bar hiện suốt phiên
-- `/goal pause` · `/goal resume` · `/goal complete` · `/goal clear` — `complete` **bị chặn** nếu còn tiêu chí chưa đạt (có `--force`)
-- `/goal budget <phút>` — ngân sách thời gian; hết hạn thì dừng tiến độ (chặn cả tick tiêu chí), `/goal resume` để tiếp · `budget set --tokens N` / `--steps N` cũng hỗ trợ
-- **Token đếm thật** bằng plugin server (đọc từng bước `step-finish`), không cần ước lượng; **briefing goal tự chèn vào system prompt mọi lượt chat** — agent luôn biết goal, việc kế tiếp, tiêu chí chưa đạt
-- `item done` **tự chạy lệnh `--verify`** đã khai báo — verify fail thì không cho đánh dấu xong (`--force` để bỏ qua)
-- Goal đang dở (`paused`/`blocked`/hết ngân sách) **không tự chạy** khi mở lại — `/goal` hiện cảnh báo + gợi ý resume
-- `/goal review <mục tiêu>` — **chế độ duyệt**: agent lập kế hoạch rồi **dừng chờ duyệt**; gõ `/goal approve` mới thi hành
-- Việc thất bại: agent gọi `item fail` — **2 lần liên tiếp tự block** (không tự chạy tiếp); `goal.json` có `version` để nâng cấp định dạng an toàn
-- **Tool `goal` có type** (plugin Crizon đăng ký): model gọi `goal({action:"item_add", …})` thay vì shell — không cần zod/bundle, shell vẫn là dự phòng
-- **Panel local: ĐÃ XOÁ (2026-09-28)** theo chỉ đạo (vô tích sụ) — gỡ lệnh `/fcc`, xoá script/test, hoàn nguyên FCC, xoá seed provider.
-  Hiện tại: dùng key Crizon qua `crizon-ai setup claude|codex|tui`; `/doctor` là bản text trong TUI.
-- Trạng thái lưu tại **`.crizon/goal.json`** (theo dự án); script quản lý `tui-goal.mjs` nằm trong harness
-- Chặn sẵn: `git push`, `git reset --hard`, `rm -rf`, `Remove-Item -Recurse -Force`
-
-### Mức tư duy (variants) — mới
-
-`crizon-ai setup tui` sinh 4 mức cho mỗi model Crizon (đổi nhanh bằng `ctrl+t` hoặc `/variants`):
-
-| Mức | Gửi lên API |
+| Nền tảng | Asset phát hành |
 |---|---|
-| **tắt** | `thinking: { type: "disabled" }` |
-| **nhanh** | `reasoning_effort: "low"` |
-| **cân-bằng** | `reasoning_effort: "high"` |
-| **sâu** | `reasoning_effort: "max"` |
+| Windows x64 | `crizon-tui-windows-x64.exe` |
+| macOS Apple Silicon / Intel | `crizon-tui-darwin-arm64` · `crizon-tui-darwin-x64` |
+| Linux x64 / arm64 | `crizon-tui-linux-x64` · `crizon-tui-linux-arm64` |
 
-Gateway cũng map sẵn: Claude Code gửi `thinking.budget_tokens` → 3 bậc; Codex gửi `reasoning.effort` → 3 bậc.
-**`/share` bị tắt mặc định** (`share: "disabled"`) — không đẩy session lên dịch vụ ngoài.
+Mỗi bản được build và chạy smoke test ngay trên hệ điều hành tương ứng. Tắt tự tải: `crizon-ai tui --no-download`.
 
-### TUI Crizon — chạy & đóng gói 1 file
+## Chọn model
 
-- **Chạy nhanh**: `crizon-ai tui` — nếu chưa có binary sẽ **tự tải từ GitHub Releases** vào `~/.crizon-ai/bin/`
-  rồi mở (bỏ qua bằng `--no-download`; đổi nguồn bằng `CRIZON_TUI_DOWNLOAD_BASE`).
-
-  | Nền tảng | Asset tự tải |
-  |---|---|
-  | Windows x64 | `crizon-tui-windows-x64.exe` |
-  | macOS Apple Silicon / Intel | `crizon-tui-darwin-arm64` · `crizon-tui-darwin-x64` |
-  | Linux x64 / arm64 | `crizon-tui-linux-x64` · `crizon-tui-linux-arm64` |
-
-  Binary do **GitHub Actions build trên runner native từng OS** (kèm smoke test `--version`) — xem
-  `.github/workflows/build-tui.yml`; phát hành qua GitHub Releases (git không chứa file > 100 MB).
-- **Chạy từ repo**: `node tools/demo-tui.mjs` — ưu tiên binary đã có, không có thì chạy từ source;
-  `--source` ép chạy source, `--binary` quay về CLI gốc (đổi binary bằng `CRIZON_TUI_BIN`).
-- **Đóng gói** (khách không cần Bun): `node tools/build-tui.mjs --skip-install`
-  → `apps/ai-cli/dist/tui/<os>-<arch>/crizon-tui[.exe]` (~138 MB, đã bỏ Web UI nhúng).
-  Script tự: vá từ điển → `bun build --single --skip-embed-web-ui` → smoke `--version` → copy artifact.
-- **Kiểm tra tiếng Việt runtime**: `node tools/tui-vi/smoke-tui.mjs <binary> --palette`
-  (chạy TUI thật trong pty, bắt màn hình tìm chuỗi Việt).
-- Từ điển: `tools/tui-vi/strings.json` + `patch.mjs --check|--restore`; chạy source cần Bun + `bun install`
-  trong source TUI (chỉ dev, gitignored — xem `tools/tui-vi/patch.mjs`).
-
-Ghi chú UX:
-
-- **Màn chào + composer kiểu TUI hiện đại**: vào chat in wordmark + phiên bản + "Tips for getting started:" + phiên/model; **gradient cyan→tím chạy ngang từng ký tự + shimmer quét qua logo khi khởi động** (terminal thật); **tin nhắn người dùng = khối viền trái `┃` + nền band**; **khung nhập nhiều dòng** (viền trái `┃`, nền band, meta `Crizon AI · model` bên trong, đáy `╹`); footer 2 bên (trái = thư mục, phải = phím tắt); chờ/đang trả lời có spinner trong khung; ↑↓ nhớ lịch sử; `Esc` dừng stream; Ctrl+C hai lần để thoát. Đổi kiểu logo: `--logo big|oc|mark|off` (hoặc `CRIZON_LOGO` / `"logo"` trong config; mặc định `big`):
-
-  ```
-    ____   ____    ___   _____   ___    _   _
-   / ___| |  _ \  |_ _| |__  /  / _ \  | \ | |
-  | |     | |_) |  | |    / /  | | | | |  \| |
-  | |___  |  _ <   | |   / /_  | |_| | | |\  |
-   \____| |_| \_\ |___| /____|  \___/  |_| \_|
-
-  Crizon AI 1.0.0   crizon/gpt-standard · phiên default
-
-  Tips for getting started:
-  1. /help để xem lệnh · /model đổi model (danh sách động)
-  ...
-
-  ┃
-  ┃ viết giúp tôi email xác nhận đơn hàng
-  ┃
-  Kính gửi Anh/Chị, …
-  ┃
-  ┃ ❯ Hỏi bất cứ điều gì…  (/ để xem lệnh)
-  ┃ Crizon AI · crizon/gpt-standard
-  ╹
-    ~\Downloads\crizonshop-platform        ↑↓ lịch sử · Esc dừng · /help
-  ```
-  (Nguồn tham chiếu giao diện: các TUI CLI khác — wordmark nửa ô; `gemini-cli/.../{AppHeader,Tips,Composer,Footer}.tsx` + snapshot — tips/composer/footer; `crush/internal/ui/logo/logo.go` — gradient + nhịp meta; Claude Code welcome/spinner.)
-- **Autocomplete lệnh**: gõ `/` → popup lệnh có mô tả (`↑↓` chọn · `Tab`/`Enter` điền · `Esc` đóng); `/sessions` mở danh sách phiên để đổi, `/rename <tên>` đổi tên phiên; **`Esc` dừng giữa lúc đang trả lời**.
-- **Khung panel (TUI)** cho menu/picker/màn "Kết nối agent" — `┌─ ─┐`, dòng đang chọn reverse-video.
-- **i18n vi/en** — chọn lúc wizard hoặc trong `settings`; lưu vào file config.
-- **Model picker động** — `/model` trong chat (hoặc mục Model trong settings) tải danh sách từ API, gõ để lọc.
-- **Markdown + spinner** — phản hồi được render theo dòng ngay khi stream (heading, đậm, code block, list…); spinner chỉ hiện trên terminal.
-- **Non-TTY / pipe** — mọi menu tự chuyển sang dạng "nhập số"; `NO_COLOR=1` để tắt màu.
-- **Phiên chat** — lưu tại `~/.crizon-ai/sessions/<tên>.json` (mặc định `default`), tự tiếp tục ở lần chạy sau.
-- **Log cục bộ** — `~/.crizon-ai/logs.jsonl` (prompt/trả lời cắt 500 ký tự, có usage; không chứa key).
-
-## Slash commands
-
-**Có sẵn trong chat**: `/help` · `/model` (alias `/models`) · **`/language [vi|en]`** · `/settings` · `/system` · `/sessions` · `/new [tên]` · `/rename <tên>` · `/undo` · `/export [file]` · `/status` · `/clear` · `/exit`. Gõ `/` để mở danh sách (↑↓ · Tab/Enter điền · Esc đóng).
-
-**Lệnh tự tạo** (theo chuẩn TUI):
-
-- **Thư mục**: `<cwd>/.opencode/commands/` · `<cwd>/.crizon/commands/` · `~/.config/opencode/commands/` · `~/.crizon-ai/commands/` — tên file = tên lệnh (`test.md` → `/test`); project đè global.
-- **Frontmatter**: `description`, `model` (lệnh chạy bằng model riêng); `agent` được chấp nhận nhưng bỏ qua.
-- **Template**: `$ARGUMENTS` (toàn bộ tham số) · `$1..$n` (theo từng tham số, hỗ trợ quote) · **!`shell`** (chạy trong cwd, chèn stdout) · **@file** (chèn nội dung file).
-- Hoặc khai báo trong `~/.crizon-ai.json`: `"command": { "test": { "template": "...", "description": "...", "model": "..." } }`.
-
-Ví dụ `.crizon/commands/review.md`:
-
-```md
----
-description: Review thay đổi gần đây
-model: crizon/deepseek-pro
----
-
-Git log gần đây:
-!`git log --oneline -5`
-
-Đọc @README.md rồi review: $ARGUMENTS
-```
-
-→ trong chat gõ `/review phần thanh toán` là prompt được mở rộng và gửi đi.
-
-## Kết nối CLI/harness (M3)
+Một key Crizon **không bị giới hạn model**. Chọn model ở CLI:
 
 ```bash
-crizon-ai setup claude     # preflight gateway → ghi env + khối marker vào shell profile
-crizon-ai setup codex      # hoặc: crizon-ai settings → Kết nối agent
-crizon-ai setup tui        # TUI Crizon (nền TUI mã nguồn mở, model qua API Crizon)
-crizon-ai disconnect claude
+crizon-ai models                          # xem toàn bộ model khả dụng
+crizon-ai ask "…" --model crizon/gpt-standard
 ```
 
-- **Claude Code**: ghi `ANTHROPIC_BASE_URL` (origin, không `/v1`), `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_MODEL` (nếu đã chọn model) → chạy `claude` là dùng model qua API Crizon.
-- **Codex**: ghi `OPENAI_BASE_URL` (có `/v1`), `OPENAI_API_KEY`.
-- **TUI Crizon**: ghi config riêng `~/.crizon-ai/harness/tui.json` (provider `crizon` = `@ai-sdk/openai-compatible` + baseURL + model lấy động từ `/v1/models`) + `tui-config.json` + plugin thương hiệu `tui-brand.tsx` (**logo CRIZON trên màn hình chính**) và env `OPENCODE_CONFIG`/`OPENCODE_TUI_CONFIG` (tên biến do nhân TUI quy định) — **không đụng config TUI khác trên máy bạn**; chạy `crizon-ai tui` (đã kiểm chứng end-to-end với gateway giả: `> build · crizon/gpt-standard` + trả lời qua SSE).
-- **An toàn**: không đè file người dùng — chỉ ghi khối `# >>> crizon-ai (<harness>) >>> … # <<< crizon-ai <<<` và tạo backup trước khi sửa; file env riêng `~/.crizon-ai/harness/<harness>.env` (quyền 600). **Raw key không bao giờ in ra stdout** (chỉ hiện dạng che; key thật nằm trong file 600).
-- **Tuỳ chọn**: `--print` (xem khối sẽ ghi, không ghi gì) · `--no-apply` (chỉ ghi file env, không đụng profile) · `--profile <path>` (đổi file profile đích) · `--json`.
-- **Preflight**: `setup`/`settings`/`doctor` tự probe `HEAD /v1/messages` / `/v1/responses` — gateway cũ trả 404 sẽ hiện cảnh báo "chưa hỗ trợ" thay vì kết nối hỏng.
+Trong chat: `/model` · Trong TUI: `ctrl+x m` (hoặc `/variants` để đổi mức tư duy).
 
-## Chạy thử ngay — 1 lệnh duy nhất
+## TUI Crizon
 
-```powershell
-# TUI crizon-ai (tự làm)
-node apps\ai-cli\tools\demo.mjs
+- Khởi động: `crizon-ai tui` — mở trong thư mục dự án hiện tại.
+- Mục tiêu: `/goal <mục tiêu>` · `/goal pause|resume|complete|clear` · `/goal budget <phút>`.
+- Chẩn đoán: `/doctor` — kiểm tra key, gateway, model, goal ngay trong TUI.
+- `Ctrl+P` mở bảng lệnh, `Tab` đổi agent, `Esc` dừng trả lời.
+- Trạng thái mục tiêu lưu theo dự án tại `.crizon/goal.json`.
 
-# Mở TUI thật với API Crizon (mock)
-node apps\ai-cli\tools\demo-tui.mjs
-# chạy nhanh 1 câu không tương tác:
-node apps\ai-cli\tools\demo-tui.mjs "xin chào"
-```
-
-Lệnh này tự: mở mock gateway (cổng ngẫu nhiên) → trỏ CLI vào đó với config/home/profile **tạm** (không đụng máy thật hay config thật) → vào chat/TUI luôn. Gõ câu hỏi để thử, `/exit` (CLI) hoặc Ctrl+C (TUI) để thoát (tự dọn dẹp).
-
-<details>
-<summary>Nâng cao (chỉ khi cần)</summary>
-
-- Chạy mock riêng để test client khác (VD Claude Code thật):
-
-  ```powershell
-  node apps\ai-cli\tools\mock-gateway.mjs          # terminal 1 (cổng 18787)
-  $env:ANTHROPIC_BASE_URL="http://127.0.0.1:18787"; $env:ANTHROPIC_AUTH_TOKEN="czn_local_test"; claude
-  ```
-
-- Mock giả lập đủ 3 giao thức: `/v1/models`, `/v1/chat/completions`, `/v1/messages` (+`count_tokens`), `/v1/responses`, HEAD preflight — dùng được cho cả `setup`/`doctor`.
-
-</details>
-
-## Cấu hình
-
-Thứ tự ưu tiên: **flags > biến môi trường > file > mặc định**
-
-| Nguồn | Giá trị |
-|---|---|
-| Biến môi trường | `CRIZON_API_KEY`, `CRIZON_BASE_URL`, `CRIZON_MODEL`, `CRIZON_LANG`, `CRIZON_CONFIG_PATH`, `CRIZON_HOME` |
-| File | `~/.crizon-ai.json` — `{ "apiKey": "czn_...", "baseUrl": "...", "model": "...", "lang": "vi", "harness": "chat" }` |
-| Thư mục dữ liệu | `~/.crizon-ai/` — `sessions/`, `logs.jsonl`, `roles.json` (đổi bằng `CRIZON_HOME`) |
-| Mặc định | base `https://ai.crizonshop.com/v1` |
-
-Ví dụ dùng trong CI/script (không cần login):
+## Kết nối CLI khác bằng cùng một key
 
 ```bash
-CRIZON_API_KEY=czn_xxx node bin/crizon-ai.mjs ask "ping" --no-stream
-echo "tóm tắt file này" | node bin/crizon-ai.mjs ask
-crizon-ai roles add gia-su "Bạn là giáo sư AI, trả lời ngắn gọn"
-crizon-ai ask --role gia-su "Giải thích máy học cho trẻ 10 tuổi"
+crizon-ai setup claude    # Claude Code
+crizon-ai setup codex     # Codex
+crizon-ai setup aider     # Aider
+crizon-ai setup qwen      # Qwen Code
+crizon-ai setup tui       # TUI Crizon
 ```
 
-> ⚠️ Không commit key vào git. CLI không bao giờ in raw key ra output.
+Mỗi lệnh ghi env riêng (quyền 600) + khối marker vào shell profile (có backup), không đụng cấu hình sẵn có.
 
-## Trạng thái phát triển
+## Bảo mật
 
-- ✅ **M1** — client API: login/models/ask/chat/env/config/logout, stream SSE, envelope lỗi.
-- ✅ **M2** — wizard lần đầu · settings panel · i18n vi/en · model picker động · markdown + spinner · `--json` · roles · sessions · logs · `doctor` (28 test).
-- ✅ **M3 (CLI-side)** — `setup claude|codex|tui` (preflight + env 600 + khối marker có backup) · `disconnect` · panel "Kết nối agent" (●/○) · `doctor` probe `/v1/messages`/`/v1/responses` (38 test). Nghiệm thu thật (Claude Code chạy với model qua API Crizon) chờ gateway deploy + DNS.
-
-## Lỗi thường gặp
-
-| Mã | Nghĩa | Cách xử lý |
-|---|---|---|
-| `401 invalid_api_key` | Key sai/hết hiệu lực | Kiểm tra lại key, tạo key mới ở portal |
-| `402` | Ví/hạn mức không đủ | Nạp tiền / đổi gói trên portal |
-| `429` | Hết hạn mức hoặc request dồn | Thử lại sau; xem Usage trên portal |
-| `503` | Gateway tạm bận / control-plane không sẵn sàng | Thử lại sau |
-| `network_error` | Không kết nối được base URL | Kiểm tra mạng/base URL — chạy `crizon-ai doctor` |
+- API key lưu cục bộ với quyền `600`, không gửi đi đâu ngoài API Crizon.
+- Phiên TUI mặc định **không chia sẻ ra ngoài** (`share: "disabled"`).
+- Key hiển thị một lần khi tạo; có thể thu hồi/xoay vòng bất kỳ lúc nào trên portal.
 
 ## Phát triển
 
 ```bash
-cd apps/ai-cli
-npm test          # node --test (fixture HTTP nội bộ, không cần gateway thật)
+node --test                 # chạy bộ test (zero-dep)
+node tools/build-tui.mjs    # đóng gói TUI thành 1 file binary (cần Bun + source)
+node tools/demo-tui.mjs     # chạy thử TUI với gateway giả lập
 ```
 
-Kế hoạch & phạm vi: `docs/ai-cli-plan.md` · Đặc tả UI: `docs/ai-cli-ui-spec.md`.
+## Bản quyền
+
+[MIT](LICENSE) © CrizonShop. Thành phần bên thứ ba: xem [THIRD-PARTY.md](THIRD-PARTY.md).
+
+---
+
+<div align="center">
+<a href="https://github.com/Catdzx13/crizon-ai/releases/latest">Tải bản mới nhất</a> ·
+<a href="https://github.com/Catdzx13/crizon-ai/issues">Báo lỗi / góp ý</a> ·
+<a href="https://crizonshop.com">CrizonShop</a>
+</div>

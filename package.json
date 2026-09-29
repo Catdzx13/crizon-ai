@@ -1,7 +1,7 @@
 {
   "name": "crizon-ai",
   "version": "1.0.0",
-  "description": "Crizon AI CLI — dùng API AI CrizonShop từ terminal + TUI Crizon (chat/code)",
+  "description": "Crizon AI CLI — trợ lý AI CrizonShop trong terminal + TUI Crizon",
   "type": "module",
   "bin": {
     "crizon-ai": "bin/crizon-ai.mjs"
@@ -22,6 +22,10 @@
     "ai",
     "cli",
     "tui",
-    "vi"
-  ]
+    "terminal",
+    "agent",
+    "openai-compatible",
+    "vietnamese"
+  ],
+  "license": "MIT"
 }
