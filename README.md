@@ -6,8 +6,11 @@ Zero dependency — chỉ cần **Node.js ≥ 20**.
 ## Cài đặt
 
 ```bash
-# 1 lệnh cài (cần Node >= 20 và git)
+# 1 lệnh cài — dùng ngay từ GitHub:
 npm i -g github:Catdzx13/crizon-ai
+
+# (sau khi phát hành npm) hoặc:
+npm i -g crizon-ai
 
 # 1 lệnh khởi động: TUI Crizon (tự tải binary ~138 MB lần đầu; Windows/macOS/Linux x64+arm64)
 crizon-ai tui

@@ -1,5 +1,5 @@
 {
-  "name": "@crizon/ai-cli",
+  "name": "crizon-ai",
   "version": "1.0.0",
   "description": "Crizon AI CLI — dùng API AI CrizonShop từ terminal + TUI Crizon (chat/code)",
   "type": "module",
