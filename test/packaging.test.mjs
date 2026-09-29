@@ -19,22 +19,22 @@ function run(script, args = []) {
   }
 }
 
-test("build-opencode-vi: --help in hướng dẫn (exit 0)", () => {
-  const r = run("build-opencode-vi.mjs", ["--help"]);
+test("build-tui: --help in hướng dẫn (exit 0)", () => {
+  const r = run("build-tui.mjs", ["--help"]);
   assert.equal(r.code, 0);
-  assert.match(r.out, /build-opencode-vi/);
+  assert.match(r.out, /build-tui/);
   assert.match(r.out, /--skip-install/);
   assert.match(r.out, /KHÔNG cần Bun/);
 });
 
 test("smoke-tui: thiếu tham số → hướng dẫn + exit 2", () => {
-  const r = run(join("opencode-vi", "smoke-tui.mjs"));
+  const r = run(join("tui-vi", "smoke-tui.mjs"));
   assert.equal(r.code, 2);
   assert.match(r.out, /smoke-tui/);
 });
 
 test("smoke-tui: binary không tồn tại → báo lỗi rõ, exit 2 (không crash)", () => {
-  const r = run(join("opencode-vi", "smoke-tui.mjs"), [join(here, "khong-ton-tai-opencode.exe")]);
+  const r = run(join("tui-vi", "smoke-tui.mjs"), [join(here, "khong-ton-tai-tui.exe")]);
   assert.equal(r.code, 2);
   assert.match(r.out, /Không thấy binary|node-pty/);
 });

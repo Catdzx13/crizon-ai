@@ -26,5 +26,5 @@ test("harness: qwen là OpenAI-compatible (OPENAI_BASE_URL + OPENAI_MODEL)", () 
 test("harness: probe URL theo từng loại (codex/claude không đổi)", () => {
   assert.equal(compatProbeUrl("codex", "https://gw.test/v1"), "https://gw.test/v1/responses");
   assert.equal(compatProbeUrl("claude", "https://gw.test/v1"), "https://gw.test/v1/messages");
-  assert.equal(compatProbeUrl("opencode", "https://gw.test/v1"), "https://gw.test/v1/messages");
+  assert.equal(compatProbeUrl("tui", "https://gw.test/v1"), "https://gw.test/v1/messages");
 });

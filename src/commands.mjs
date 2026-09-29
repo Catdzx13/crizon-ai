@@ -9,7 +9,7 @@ import { ApiError, CrizonClient } from "./client.mjs";
 import { createComposer } from "./composer.mjs";
 import { homeDir, loadConfigFile, resolveConfig, saveConfigFile, updateConfigFile } from "./config.mjs";
 import { runDoctor } from "./doctor.mjs";
-import { applyProfileBlock, brandPluginSource, cleanupHarness, commandExists, detectProfilePath, doctorScriptSource, goalPluginSource, goalScriptSource, HARNESSES, harnessStatus, isHarnessId, managedBrandFile, managedConfigFile, managedDoctorFile, managedEnvFile, managedGoalFile, managedGoalPluginFile, managedTuiConfigFile, maskEnvValue, probeCompat, profileShell, removeProfileBlock, renderEnvBlock, renderManagedEnv, renderOpencodeConfig, renderTuiConfig } from "./harness.mjs";
+import { applyProfileBlock, brandPluginSource, cleanupHarness, commandExists, detectProfilePath, doctorScriptSource, goalPluginSource, goalScriptSource, HARNESSES, harnessStatus, isHarnessId, managedBrandFile, managedConfigFile, managedDoctorFile, managedEnvFile, managedGoalFile, managedGoalPluginFile, managedTuiConfigFile, maskEnvValue, probeCompat, profileShell, removeProfileBlock, renderEnvBlock, renderManagedEnv, renderOpencodeConfig, renderTuiConfig, resolveHarnessId } from "./harness.mjs";
 import { expandCommand, loadCustomCommands } from "./custom-commands.mjs";
 import { openUrl, portalKeysUrl } from "./open-url.mjs";
 import { getLang, LANGS, setLang, t, tIn } from "./i18n.mjs";
@@ -45,7 +45,7 @@ export function defaultIo() {
 
 const dim = (io, text) => paint(colorEnabled(io.stdout), 2, text);
 
-/** ~/duong/dan — rút gọn cho footer kiểu OpenCode. */
+/** ~/duong/dan — rút gọn cho footer kiểu TUI Crizon. */
 function shortenCwd(cwd, home) {
   const value = String(cwd || "");
   const prefix = home && value.toLowerCase().startsWith(String(home).toLowerCase())
@@ -160,20 +160,23 @@ const PACKAGE_DIR = join(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO_ROOT_DIR = join(PACKAGE_DIR, "..", "..");
 
 /**
- * Ứng viên binary TUI OpenCode việt hoá (theo thứ tự ưu tiên):
+ * Ứng viên binary TUI Crizon (theo thứ tự ưu tiên):
  * --bin > CRIZON_OPENCODE_VI_BIN > ~/.crizon-ai/bin > artifact đóng gói trong package > dist của source dev.
  */
 export function tuiBinaryCandidates({ flags = {}, env = process.env, packageDir = PACKAGE_DIR, repoRoot = REPO_ROOT_DIR } = {}) {
   const isWin = process.platform === "win32";
   const platformDir = isWin ? "windows" : process.platform;
-  const exeName = isWin ? "opencode.exe" : "opencode";
+  const exeName = isWin ? "crizon-tui.exe" : "crizon-tui";
+  const legacyExe = isWin ? "opencode.exe" : "opencode";
   const distName = `opencode-${platformDir}-${process.arch}`;
   return [
     flags.bin,
-    env.CRIZON_OPENCODE_VI_BIN,
+    env.CRIZON_TUI_BIN ?? env.CRIZON_OPENCODE_VI_BIN,
     join(homeDir(env), "bin", exeName),
-    join(packageDir, "dist", "opencode", `${platformDir}-${process.arch}`, exeName),
-    join(repoRoot, "reference", "ai-clis", "opencode", "packages", "opencode", "dist", distName, "bin", exeName),
+    join(homeDir(env), "bin", legacyExe),
+    join(packageDir, "dist", "tui", `${platformDir}-${process.arch}`, exeName),
+    join(packageDir, "dist", "opencode", `${platformDir}-${process.arch}`, legacyExe),
+    join(repoRoot, "reference", "ai-clis", "opencode", "packages", "opencode", "dist", distName, "bin", legacyExe),
   ].filter((path) => typeof path === "string" && path.length > 0);
 }
 
@@ -186,9 +189,9 @@ export const DEFAULT_TUI_DOWNLOAD_BASE = "https://github.com/Catdzx13/crizon-ai/
 
 /** Tên asset theo nền tảng/kiến trúc — trả "" nếu chưa hỗ trợ. */
 export function tuiAssetName({ platform = process.platform, arch = process.arch } = {}) {
-  if (platform === "win32") return arch === "x64" ? "opencode-windows-x64.exe" : "";
-  if (platform === "darwin") return arch === "arm64" ? "opencode-darwin-arm64" : arch === "x64" ? "opencode-darwin-x64" : "";
-  if (platform === "linux") return arch === "x64" ? "opencode-linux-x64" : arch === "arm64" ? "opencode-linux-arm64" : "";
+  if (platform === "win32") return arch === "x64" ? "crizon-tui-windows-x64.exe" : "";
+  if (platform === "darwin") return arch === "arm64" ? "crizon-tui-darwin-arm64" : arch === "x64" ? "crizon-tui-darwin-x64" : "";
+  if (platform === "linux") return arch === "x64" ? "crizon-tui-linux-x64" : arch === "arm64" ? "crizon-tui-linux-arm64" : "";
   return "";
 }
 
@@ -219,10 +222,10 @@ export async function downloadTuiBinary({ url, dest, fetchImpl = fetch } = {}) {
   return buffer.length;
 }
 
-/** Mở TUI OpenCode việt hoá với config Crizon thật (không mock). Tham số thêm chuyển tiếp cho OpenCode. */
+/** Mở TUI Crizon với config Crizon thật (không mock). Tham số thêm chuyển tiếp cho TUI Crizon. */
 export async function cmdTui({ flags = {}, env = process.env, io = defaultIo(), deps = {} } = {}) {
-  const configPath = managedConfigFile(env, "opencode");
-  const tuiConfigPath = managedTuiConfigFile(env, "opencode");
+  const configPath = managedConfigFile(env, "tui");
+  const tuiConfigPath = managedTuiConfigFile(env, "tui");
   if (!existsSync(configPath)) {
     io.out(t("tui.configMissing"));
     return 2;
@@ -231,7 +234,7 @@ export async function cmdTui({ flags = {}, env = process.env, io = defaultIo(), 
   if (!binary && !flags["no-download"]) {
     const url = tuiDownloadUrl({ env });
     if (url) {
-      const exeName = process.platform === "win32" ? "opencode.exe" : "opencode";
+      const exeName = process.platform === "win32" ? "crizon-tui.exe" : "crizon-tui";
       const dest = join(homeDir(env), "bin", exeName);
       io.out(t("tui.downloading", { url }));
       try {
@@ -538,7 +541,7 @@ export async function cmdRoles({ flags = {}, env = process.env, io = defaultIo()
   return 2;
 }
 
-/** Lệnh trong chat — hiện trong autocomplete khi gõ "/" (kiểu OpenCode). */
+/** Lệnh trong chat — hiện trong autocomplete khi gõ "/" (kiểu TUI Crizon). */
 const CHAT_COMMANDS = [
   { name: "/help", key: "cmd.help" },
   { name: "/model", key: "cmd.model" },
@@ -980,7 +983,7 @@ export async function cmdEnv({ flags = {}, env = process.env, io = defaultIo() }
 
 export function agentsStatusLine(env = process.env, flags = {}) {
   const profilePath = detectProfilePath(process.platform, env);
-  const shortNames = { claude: "Claude", codex: "Codex", opencode: "OpenCode" };
+  const shortNames = { claude: "Claude", codex: "Codex", opencode: "TUI Crizon" };
   return Object.values(HARNESSES)
     .map((harness) => {
       const status = harnessStatus(env, harness.id, { profilePath });
@@ -1008,7 +1011,7 @@ async function setupHarness({ id, cfg, flags = {}, env = process.env, io, uiFns,
   const profilePath = flags.profile ? String(flags.profile) : detectProfilePath(process.platform, env);
   const status = harnessStatus(env, id, { profilePath });
   const installed = commandExists(harness.command);
-  const extra = id === "opencode"
+  const extra = id === "tui"
     ? { configPath: managedConfigFile(env, id), tuiConfigPath: managedTuiConfigFile(env, id), lang: cfg.lang || "vi" }
     : {};
   const preview = () => {
@@ -1049,7 +1052,7 @@ async function setupHarness({ id, cfg, flags = {}, env = process.env, io, uiFns,
   const probe = await probeAndReport(id, cfg, io, { quiet: true });
   if (!probe.supported) io.out(describeProbe(probe, cfg));
 
-  if (id === "opencode") {
+  if (id === "tui") {
     let models = [];
     try {
       models = await modelIds(makeClient(cfg));
@@ -1062,10 +1065,10 @@ async function setupHarness({ id, cfg, flags = {}, env = process.env, io, uiFns,
     const doctorFile = managedDoctorFile(env, id);
     writeFileSync(extra.configPath, renderOpencodeConfig(cfg, models, { goalScript: goalFile, goalPlugin: goalPluginFile, doctorScript: doctorFile, configPath: extra.configPath }), { mode: 0o600 });
     if (!flags.json) io.out(t("setup.wroteConfig", { path: extra.configPath }));
-    // Thương hiệu Crizon trong TUI OpenCode (slot home_logo qua plugin chính thức).
+    // Thương hiệu Crizon trong TUI Crizon (slot home_logo qua plugin chính thức).
     writeFileSync(extra.tuiConfigPath, renderTuiConfig(id), { mode: 0o600 });
     writeFileSync(managedBrandFile(env, id), brandPluginSource(), { mode: 0o600 });
-    // Goal loop: script trạng thái (.opencode/goal.json theo dự án) + plugin server (token/briefing).
+    // Goal loop: script trạng thái (.crizon/goal.json theo dự án) + plugin server (token/briefing).
     writeFileSync(goalFile, goalScriptSource(), { mode: 0o600 });
     writeFileSync(goalPluginFile, goalPluginSource(), { mode: 0o600 });
     // Chẩn đoán /crizon (kiểu fcc-doctor) — chạy cục bộ, chỉ đọc.
@@ -1097,11 +1100,9 @@ async function setupHarness({ id, cfg, flags = {}, env = process.env, io, uiFns,
       ? t("setup.appliedProfile", { path: applied.path, backup: applied.backup })
       : t("setup.appliedProfileNew", { path: applied.path }));
   }
-  if (!flags.json) io.out(t("setup.connected", { command: id === "opencode" ? `${harness.command} --standalone` : harness.command }));
-  if (id === "opencode" && !flags.json) {
-    io.out(t("setup.opencodeHint"));
-    const brandedBin = join(process.env.USERPROFILE || homedir(), "crizon-opencode", "opencode.cmd");
-    if (existsSync(brandedBin)) io.out(t("setup.opencodeBrandBin", { path: brandedBin }));
+  if (!flags.json) io.out(t("setup.connected", { command: id === "tui" ? "crizon-ai tui" : harness.command }));
+  if (id === "tui" && !flags.json) {
+    io.out(t("setup.tuiHint"));
   }
   if (flags.json) {
     io.out(JSON.stringify({
@@ -1145,6 +1146,7 @@ export async function cmdSetup({ flags = {}, env = process.env, io = defaultIo()
     io.out(`${SYM.err} ${t("setup.usage")}`);
     return 2;
   }
+  if (id !== undefined) id = resolveHarnessId(id);
   if (!id) {
     if (!io.stdin?.isTTY) {
       io.out(t("setup.usage"));
@@ -1182,6 +1184,7 @@ export async function cmdDisconnect({ flags = {}, env = process.env, io = defaul
     io.out(`${SYM.err} ${t("setup.usage")}`);
     return 2;
   }
+  id = resolveHarnessId(id);
   const profilePath = flags.profile ? String(flags.profile) : detectProfilePath(process.platform, env);
   return disconnectHarness({ id, env, io, profilePath });
 }

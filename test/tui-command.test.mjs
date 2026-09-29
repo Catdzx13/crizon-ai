@@ -30,27 +30,27 @@ test("tui: chưa cài harness → nhắc setup (exit 2)", async (t) => {
   const { io, lines } = makeIo();
   const code = await cmdTui({ env, io });
   assert.equal(code, 2);
-  assert.match(lines.join("\n"), /setup opencode/);
+  assert.match(lines.join("\n"), /setup tui/);
 });
 
 test("tui: thiếu binary → hướng dẫn đóng gói (exit 2)", async (t) => {
   const { dir, env } = tempEnv();
   t.after(() => rmSync(dir, { recursive: true, force: true }));
-  const configPath = managedConfigFile(env, "opencode");
+  const configPath = managedConfigFile(env, "tui");
   mkdirSync(dirname(configPath), { recursive: true });
   writeFileSync(configPath, "{}");
 
   const { io, lines } = makeIo();
   const code = await cmdTui({ flags: { "no-download": true }, env, io, deps: { resolveBinary: () => "" } });
   assert.equal(code, 2);
-  assert.match(lines.join("\n"), /build-opencode-vi/);
+  assert.match(lines.join("\n"), /build-tui/);
 });
 
 test("tui: mở binary với OPENCODE_CONFIG/TUI_CONFIG + chuyển tiếp tham số + mã thoát", async (t) => {
   const { dir, env } = tempEnv();
   t.after(() => rmSync(dir, { recursive: true, force: true }));
-  const configPath = managedConfigFile(env, "opencode");
-  const tuiConfigPath = managedTuiConfigFile(env, "opencode");
+  const configPath = managedConfigFile(env, "tui");
+  const tuiConfigPath = managedTuiConfigFile(env, "tui");
   mkdirSync(dirname(configPath), { recursive: true });
   writeFileSync(configPath, "{}");
   writeFileSync(tuiConfigPath, "{}");
@@ -106,11 +106,11 @@ test("resolveTuiBinary: không có ứng viên nào → ''", () => {
 test("tuiDownloadUrl: map asset theo nền tảng/kiến trúc", () => {
   const base = "https://x.test/dl";
   const url = (platform, arch) => tuiDownloadUrl({ env: { CRIZON_TUI_DOWNLOAD_BASE: base }, platform, arch });
-  assert.equal(url("win32", "x64"), `${base}/opencode-windows-x64.exe`);
-  assert.equal(url("darwin", "arm64"), `${base}/opencode-darwin-arm64`);
-  assert.equal(url("darwin", "x64"), `${base}/opencode-darwin-x64`);
-  assert.equal(url("linux", "x64"), `${base}/opencode-linux-x64`);
-  assert.equal(url("linux", "arm64"), `${base}/opencode-linux-arm64`);
+  assert.equal(url("win32", "x64"), `${base}/crizon-tui-windows-x64.exe`);
+  assert.equal(url("darwin", "arm64"), `${base}/crizon-tui-darwin-arm64`);
+  assert.equal(url("darwin", "x64"), `${base}/crizon-tui-darwin-x64`);
+  assert.equal(url("linux", "x64"), `${base}/crizon-tui-linux-x64`);
+  assert.equal(url("linux", "arm64"), `${base}/crizon-tui-linux-arm64`);
   assert.equal(url("win32", "arm64"), "");
   assert.equal(url("linux", "ia32"), "");
   assert.equal(url("freebsd", "x64"), "");
@@ -140,8 +140,8 @@ test("downloadTuiBinary: tải + ghi file, lỗi rõ ràng", async (t) => {
 test("tui: không có binary → tự tải từ GitHub Releases rồi chạy", { skip: process.platform !== "win32" }, async (t) => {
   const { dir, env } = tempEnv();
   t.after(() => rmSync(dir, { recursive: true, force: true }));
-  const configPath = managedConfigFile(env, "opencode");
-  const tuiConfigPath = managedTuiConfigFile(env, "opencode");
+  const configPath = managedConfigFile(env, "tui");
+  const tuiConfigPath = managedTuiConfigFile(env, "tui");
   mkdirSync(dirname(configPath), { recursive: true });
   writeFileSync(configPath, "{}");
   writeFileSync(tuiConfigPath, "{}");
@@ -172,7 +172,7 @@ test("tui: không có binary → tự tải từ GitHub Releases rồi chạy", 
   });
   assert.equal(code, 0);
   assert.deepEqual(downloads, [
-    { url: "https://x.test/dl/opencode-windows-x64.exe", dest: join(env.CRIZON_HOME, "bin", "opencode.exe") },
+    { url: "https://x.test/dl/crizon-tui-windows-x64.exe", dest: join(env.CRIZON_HOME, "bin", "crizon-tui.exe") },
   ]);
   assert.equal(spawned.length, 1);
   assert.match(lines.join("\n"), /Đã tải TUI|downloaded/);
@@ -181,7 +181,7 @@ test("tui: không có binary → tự tải từ GitHub Releases rồi chạy", 
 test("tui: --no-download thì không tải, báo thiếu binary (exit 2)", async (t) => {
   const { dir, env } = tempEnv();
   t.after(() => rmSync(dir, { recursive: true, force: true }));
-  const configPath = managedConfigFile(env, "opencode");
+  const configPath = managedConfigFile(env, "tui");
   mkdirSync(dirname(configPath), { recursive: true });
   writeFileSync(configPath, "{}");
 

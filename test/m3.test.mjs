@@ -269,19 +269,19 @@ test("agentsMenu: connect claude qua panel rồi thoát; status line ● ○", a
   assert.match(line, /Codex ○/);
 });
 
-test("opencode: config provider Crizon + setup/disconnect", async (t) => {
+test("tui: config provider Crizon + setup/disconnect", async (t) => {
   const fixture = await startFixture({ compat: true });
   t.after(() => fixture.server.close());
   const sample = JSON.parse(renderOpencodeConfig(
     { baseUrl: fixture.baseUrl, apiKey: "k", model: "crizon/gpt-standard" },
     ["crizon/gpt-standard", "crizon/deepseek-pro"],
-    { goalScript: "C:\\crizon\\harness\\opencode-goal.mjs", goalPlugin: "C:\\crizon\\harness\\opencode-goal-plugin.mjs", doctorScript: "C:\\crizon\\harness\\opencode-doctor.mjs", configPath: "C:\\crizon\\harness\\opencode.json" },
+    { goalScript: "C:\\crizon\\harness\\tui-goal.mjs", goalPlugin: "C:\\crizon\\harness\\tui-goal-plugin.mjs", doctorScript: "C:\\crizon\\harness\\tui-doctor.mjs", configPath: "C:\\crizon\\harness\\tui.json" },
   ));
-  assert.ok(sample.plugin.includes("C:\\crizon\\harness\\opencode-goal-plugin.mjs"), "plugin server phải được khai báo");
+  assert.ok(sample.plugin.includes("C:\\crizon\\harness\\tui-goal-plugin.mjs"), "plugin server phải được khai báo");
   assert.ok(!sample.command.crizon, "panel tự vẽ đã bỏ khỏi menu");
   assert.ok(!sample.command.fcc, "panel FCC local đã bỏ khỏi menu");
-  assert.match(sample.command.doctor.template, /opencode-doctor\.mjs/, "lệnh /doctor chạy script doctor");
-  assert.match(sample.command.doctor.template, /--config "C:\\crizon\\harness\\opencode\.json"/, "lệnh /doctor truyền đúng config path");
+  assert.match(sample.command.doctor.template, /tui-doctor\.mjs/, "lệnh /doctor chạy script doctor");
+  assert.match(sample.command.doctor.template, /--config "C:\\crizon\\harness\\tui\.json"/, "lệnh /doctor truyền đúng config path");
   assert.equal(sample.provider.crizon.npm, "@ai-sdk/openai-compatible");
   assert.equal(sample.provider.crizon.name, "Crizon AI");
   assert.equal(sample.provider.crizon.options.baseURL, fixture.baseUrl);
@@ -303,8 +303,8 @@ test("opencode: config provider Crizon + setup/disconnect", async (t) => {
   assert.equal(sample.agent["goal-runner"].permission.todowrite, "allow", "subagent cần quyền todowrite");
   assert.ok(!("permissions" in sample.agent["goal-runner"]), "runtime V1 không nhận V2 permissions");
   assert.ok(!sample.command.goal.template.includes("__GOAL_SCRIPT__"), "placeholder phải được thay");
-  assert.match(sample.command.goal.template, /opencode-goal\.mjs/);
-  assert.match(sample.command.goal.template, /opencode-goal\.mjs" status/);
+  assert.match(sample.command.goal.template, /tui-goal\.mjs/);
+  assert.match(sample.command.goal.template, /tui-goal\.mjs" status/);
   assert.match(sample.command.goal.template, /accept add/);
   assert.match(sample.command.goal.template, /item add/);
   assert.match(sample.command.goal.template, /todowrite/);
@@ -317,43 +317,43 @@ test("opencode: config provider Crizon + setup/disconnect", async (t) => {
   const { env } = tempEnv();
   const { io, lines } = makeIo();
   const code = await cmdSetup({
-    flags: { key: "testkey", "base-url": fixture.baseUrl, _: ["opencode"] },
+    flags: { key: "testkey", "base-url": fixture.baseUrl, _: ["tui"] },
     env,
     io,
   });
   assert.equal(code, 0);
-  const configFile = managedConfigFile(env, "opencode");
-  assert.ok(existsSync(configFile), "phải ghi config OpenCode");
+  const configFile = managedConfigFile(env, "tui");
+  assert.ok(existsSync(configFile), "phải ghi config TUI Crizon");
   const saved = JSON.parse(readFileSync(configFile, "utf8"));
   assert.equal(saved.provider.crizon.options.apiKey, "testkey");
   assert.ok(Object.keys(saved.provider.crizon.models).length >= 1);
-  assert.ok(saved.command?.goal, "config OpenCode phải có lệnh /goal");
+  assert.ok(saved.command?.goal, "config TUI Crizon phải có lệnh /goal");
   assert.equal(saved.share, "disabled", "config phải tắt share mặc định");
   assert.equal(saved.command.goal.agent, "goal-runner");
-  assert.match(saved.command.goal.template, /opencode-goal\.mjs/);
-  assert.ok(existsSync(managedGoalFile(env, "opencode")), "phải copy script goal vào harness");
-  const goalScript = readFileSync(managedGoalFile(env, "opencode"), "utf8");
-  assert.match(goalScript, /"\.opencode", "goal\.json"/, "script lưu trạng thái ở .opencode/goal.json");
+  assert.match(saved.command.goal.template, /tui-goal\.mjs/);
+  assert.ok(existsSync(managedGoalFile(env, "tui")), "phải copy script goal vào harness");
+  const goalScript = readFileSync(managedGoalFile(env, "tui"), "utf8");
+  assert.match(goalScript, /"\.crizon", "goal\.json"/, "script lưu trạng thái ở .crizon/goal.json");
   assert.match(goalScript, /complete/);
-  assert.ok(existsSync(managedGoalPluginFile(env, "opencode")), "phải copy plugin server goal");
-  assert.deepEqual(saved.plugin, [managedGoalPluginFile(env, "opencode")], "config phải trỏ plugin server goal");
-  assert.ok(existsSync(managedDoctorFile(env, "opencode")), "phải copy script doctor");
-  assert.match(saved.command.doctor.template, /opencode-doctor\.mjs/);
-  assert.match(saved.command.doctor.template, /opencode\.json/);
+  assert.ok(existsSync(managedGoalPluginFile(env, "tui")), "phải copy plugin server goal");
+  assert.deepEqual(saved.plugin, [managedGoalPluginFile(env, "tui")], "config phải trỏ plugin server goal");
+  assert.ok(existsSync(managedDoctorFile(env, "tui")), "phải copy script doctor");
+  assert.match(saved.command.doctor.template, /tui-doctor\.mjs/);
+  assert.match(saved.command.doctor.template, /tui\.json/);
   assert.ok(!saved.command.fcc, "panel FCC local đã bỏ");
   assert.ok(!saved.command.crizon, "panel tự vẽ đã bỏ");
-  assert.ok(saved.agent?.["goal-runner"], "config OpenCode phải có agent goal-runner");
+  assert.ok(saved.agent?.["goal-runner"], "config TUI Crizon phải có agent goal-runner");
   assert.match(saved.agent["goal-runner"].prompt, /goal-runner/, "prompt giữ nhân xưng goal-runner");
   assert.equal(saved.agent["goal-runner"].permission.bash["rm -rf*"], "deny");
-  const envText = readFileSync(managedEnvFile(env, "opencode"), "utf8");
-  assert.match(envText, /OPENCODE_CONFIG=.*opencode\.json/);
-  assert.match(envText, /OPENCODE_TUI_CONFIG=.*opencode-tui\.json/);
+  const envText = readFileSync(managedEnvFile(env, "tui"), "utf8");
+  assert.match(envText, /OPENCODE_CONFIG=.*tui\.json/);
+  assert.match(envText, /OPENCODE_TUI_CONFIG=.*tui-config\.json/);
   assert.match(envText, /CRIZON_LANG=vi/);
-  const tuiConfigFile = managedTuiConfigFile(env, "opencode");
+  const tuiConfigFile = managedTuiConfigFile(env, "tui");
   assert.ok(existsSync(tuiConfigFile), "phải ghi tui config (thương hiệu)");
   const tuiConfig = JSON.parse(readFileSync(tuiConfigFile, "utf8"));
-  assert.deepEqual(tuiConfig.plugin, [["./opencode-brand.tsx", {}]]);
-  const brandFile = managedBrandFile(env, "opencode");
+  assert.deepEqual(tuiConfig.plugin, [["./tui-brand.tsx", {}]]);
+  const brandFile = managedBrandFile(env, "tui");
   assert.ok(existsSync(brandFile), "phải copy plugin thương hiệu");
   const brandSource = readFileSync(brandFile, "utf8");
   assert.match(brandSource, /crizon\.brand/);
@@ -361,7 +361,7 @@ test("opencode: config provider Crizon + setup/disconnect", async (t) => {
   assert.match(brandSource, /AI API gateway/, "i18n en");
   assert.ok(!brandSource.includes("한국어"), "đã bỏ tiếng Hàn");
   assert.ok(!brandSource.includes("C R I Z O N   A I"), "không còn tiêu đề trên cùng");
-  assert.match(brandSource, /slashName: "language"/, "phải có lệnh /language trong menu OpenCode");
+  assert.match(brandSource, /slashName: "language"/, "phải có lệnh /language trong menu TUI Crizon");
   assert.match(brandSource, /desc:/, "lệnh /language phải có mô tả (desc) cho command palette");
   assert.ok(!/from "node:/.test(brandSource), "plugin không dùng node builtins (load an toàn)");
   assert.match(brandSource, /DIALOG_TITLE/, "dialog /language phải i18n");
@@ -369,16 +369,16 @@ test("opencode: config provider Crizon + setup/disconnect", async (t) => {
   assert.match(brandSource, /setInterval/, "phải có hiệu ứng animation");
   assert.ok(!lines.join("\n").includes("testkey"), "stdout không được chứa raw key");
   const config = JSON.parse(readFileSync(String(env.CRIZON_CONFIG_PATH), "utf8"));
-  assert.equal(config.harness, "opencode");
+  assert.equal(config.harness, "tui");
 
   const dis = makeIo();
-  const code2 = await cmdDisconnect({ flags: { _: ["opencode"] }, env, io: dis.io });
+  const code2 = await cmdDisconnect({ flags: { _: ["tui"] }, env, io: dis.io });
   assert.equal(code2, 0);
   assert.ok(!existsSync(configFile));
-  assert.ok(!existsSync(managedGoalFile(env, "opencode")), "disconnect phải xoá script goal");
-  assert.ok(!existsSync(managedGoalPluginFile(env, "opencode")), "disconnect phải xoá plugin server goal");
-  assert.ok(!existsSync(managedDoctorFile(env, "opencode")), "disconnect phải xoá script doctor");
-  assert.ok(!existsSync(managedEnvFile(env, "opencode")));
+  assert.ok(!existsSync(managedGoalFile(env, "tui")), "disconnect phải xoá script goal");
+  assert.ok(!existsSync(managedGoalPluginFile(env, "tui")), "disconnect phải xoá plugin server goal");
+  assert.ok(!existsSync(managedDoctorFile(env, "tui")), "disconnect phải xoá script doctor");
+  assert.ok(!existsSync(managedEnvFile(env, "tui")));
   assert.ok(!existsSync(tuiConfigFile));
   assert.ok(!existsSync(brandFile));
 });

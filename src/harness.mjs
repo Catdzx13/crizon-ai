@@ -73,12 +73,12 @@ export const HARNESSES = {
       return rows;
     },
   },
-  opencode: {
-    id: "opencode",
-    name: "OpenCode",
-    command: "opencode",
-    hint: "npm i -g opencode-ai",
-    description: "OpenCode (TUI OpenCode, model qua API Crizon)",
+  tui: {
+    id: "tui",
+    name: "TUI Crizon",
+    command: "crizon-ai",
+    hint: "crizon-ai tui (tự tải binary)",
+    description: "TUI Crizon (chat/code trong terminal, model qua API Crizon)",
     env(cfg, extra = {}) {
       const rows = [];
       if (extra.configPath) rows.push(["OPENCODE_CONFIG", extra.configPath]);
@@ -90,7 +90,14 @@ export const HARNESSES = {
 };
 
 export function isHarnessId(value) {
-  return typeof value === "string" && Object.prototype.hasOwnProperty.call(HARNESSES, value);
+  return typeof value === "string" && Object.prototype.hasOwnProperty.call(HARNESSES, resolveHarnessId(value));
+}
+
+/** Bí danh tương thích: `crizon-ai setup opencode` = harness "tui". */
+export const HARNESS_ALIASES = { opencode: "tui" };
+
+export function resolveHarnessId(value) {
+  return HARNESS_ALIASES[value] ?? value;
 }
 
 /** https://ai.crizonshop.com/v1 → https://ai.crizonshop.com (SDK Anthropic tự thêm /v1). */
@@ -113,14 +120,15 @@ export function managedEnvFile(env, harnessId) {
   return join(homeDir(env), "harness", `${harnessId}.env`);
 }
 
-/** File config riêng cho harness dạng config (OpenCode). */
+/** File config riêng cho harness dạng config (TUI Crizon). */
 export function managedConfigFile(env, harnessId) {
   return join(homeDir(env), "harness", `${harnessId}.json`);
 }
 
-/** Config TUI (plugin thương hiệu) + file plugin cho OpenCode. */
+/** Config TUI (plugin thương hiệu) + file plugin cho TUI Crizon. */
 export function managedTuiConfigFile(env, harnessId) {
-  return join(homeDir(env), "harness", `${harnessId}-tui.json`);
+  const name = harnessId === "tui" ? "tui-config.json" : `${harnessId}-tui.json`;
+  return join(homeDir(env), "harness", name);
 }
 
 export function managedBrandFile(env, harnessId) {
@@ -151,35 +159,35 @@ export function renderTuiConfig(harnessId) {
 
 /** Nội dung plugin thương hiệu (asset trong repo). */
 export function brandPluginSource() {
-  return readFileSync(join(moduleDir, "..", "assets", "opencode", "crizon-brand.tsx"), "utf8");
+  return readFileSync(join(moduleDir, "..", "assets", "tui", "crizon-brand.tsx"), "utf8");
 }
 
-/** Lệnh /goal — tính năng của Crizon (OpenCode không có sẵn). */
+/** Lệnh /goal — tính năng của Crizon (TUI Crizon không có sẵn). */
 export function goalCommandSource() {
-  return readFileSync(join(moduleDir, "..", "assets", "opencode", "goal-command.md"), "utf8").trimEnd();
+  return readFileSync(join(moduleDir, "..", "assets", "tui", "goal-command.md"), "utf8").trimEnd();
 }
 
 /** Agent goal-runner — vòng lặp mục tiêu tự động (tính năng của Crizon). */
 export function goalAgentSource() {
-  return readFileSync(join(moduleDir, "..", "assets", "opencode", "goal-agent.md"), "utf8").trimEnd();
+  return readFileSync(join(moduleDir, "..", "assets", "tui", "goal-agent.md"), "utf8").trimEnd();
 }
 
-/** Script quản lý trạng thái goal (.opencode/goal.json) — zero-dep Node. */
+/** Script quản lý trạng thái goal (.crizon/goal.json) — zero-dep Node. */
 export function goalScriptSource() {
-  return readFileSync(join(moduleDir, "..", "assets", "opencode", "goal.mjs"), "utf8");
+  return readFileSync(join(moduleDir, "..", "assets", "tui", "goal.mjs"), "utf8");
 }
 
 /** Plugin server goal (đếm token thật + chèn briefing vào system prompt). */
 export function goalPluginSource() {
-  return readFileSync(join(moduleDir, "..", "assets", "opencode", "crizon-goal-plugin.mjs"), "utf8");
+  return readFileSync(join(moduleDir, "..", "assets", "tui", "crizon-goal-plugin.mjs"), "utf8");
 }
 
 /** Script chẩn đoán kết nối `/crizon` — zero-dep Node. */
 export function doctorScriptSource() {
-  return readFileSync(join(moduleDir, "..", "assets", "opencode", "crizon-doctor.mjs"), "utf8");
+  return readFileSync(join(moduleDir, "..", "assets", "tui", "crizon-doctor.mjs"), "utf8");
 }
 
-/** Config OpenCode: provider "crizon" trỏ vào gateway Crizon (không đụng config gốc). */
+/** Config TUI Crizon: provider "crizon" trỏ vào gateway Crizon (không đụng config gốc). */
 export function renderOpencodeConfig(cfg, modelIds = [], options = {}) {
   const ids = modelIds.length ? modelIds : cfg.model ? [cfg.model] : [];
   // Mức tư duy 3 bậc (khớp DeepSeek Harness + Codex). V1 runtime nhận Record<id, options>;
@@ -212,7 +220,7 @@ export function renderOpencodeConfig(cfg, modelIds = [], options = {}) {
     command: {
       goal: {
         description:
-          "Mục tiêu tự động (goal loop): lập kế hoạch + tiêu chí nghiệm thu + todo — /goal pause|resume|complete|clear; trạng thái ở .opencode/goal.json",
+          "Mục tiêu tự động (goal loop): lập kế hoạch + tiêu chí nghiệm thu + todo — /goal pause|resume|complete|clear; trạng thái ở .crizon/goal.json",
         agent: "goal-runner",
         subtask: false,
         template: goalCommandSource().replaceAll("__GOAL_SCRIPT__", goalScript),

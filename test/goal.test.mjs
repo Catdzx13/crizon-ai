@@ -23,7 +23,7 @@ function run(script, dir, args) {
 
 test("goal.mjs: vòng đời mục tiêu (set→pause→resume→log→block→complete→clear)", (t) => {
   const { dir, script } = makeProject(t);
-  const stateFile = join(dir, ".opencode", "goal.json");
+  const stateFile = join(dir, ".crizon", "goal.json");
 
   assert.equal(JSON.parse(run(script, dir, ["status", "--json"])), null, "chưa có goal thì trả null");
 
@@ -60,7 +60,7 @@ test("goal.mjs: vòng đời mục tiêu (set→pause→resume→log→block→c
 
 test("goal.mjs: đặt mục tiêu mới thay thế mục tiêu cũ nhưng giữ lịch sử", (t) => {
   const { dir, script } = makeProject(t);
-  const stateFile = join(dir, ".opencode", "goal.json");
+  const stateFile = join(dir, ".crizon", "goal.json");
 
   run(script, dir, ["set", "mục tiêu A"]);
   run(script, dir, ["complete", "A xong"]);
@@ -76,7 +76,7 @@ test("goal.mjs: đặt mục tiêu mới thay thế mục tiêu cũ nhưng giữ
 
 test("goal.mjs: plan-first + verify + gate complete", (t) => {
   const { dir, script } = makeProject(t);
-  const stateFile = join(dir, ".opencode", "goal.json");
+  const stateFile = join(dir, ".crizon", "goal.json");
 
   run(script, dir, ["set", "hoàn tất GĐ1"]);
   run(script, dir, ["accept", "add", "test suite xanh"]);
@@ -114,7 +114,7 @@ test("goal.mjs: plan-first + verify + gate complete", (t) => {
 
 test("goal.mjs: ngân sách thời gian — hoàn thành hạn mức thì chặn tiến độ, resume/bỏ hạn mức để tiếp", async (t) => {
   const { dir, script } = makeProject(t);
-  const stateFile = join(dir, ".opencode", "goal.json");
+  const stateFile = join(dir, ".crizon", "goal.json");
 
   run(script, dir, ["set", "chạy có ngân sách"]);
   run(script, dir, ["budget", "set", "--seconds", "0.05"]);
@@ -140,7 +140,7 @@ test("goal.mjs: ngân sách thời gian — hoàn thành hạn mức thì chặn
 
 test("goal.mjs: item done tự chạy verify — fail thì chặn (exit 5)", (t) => {
   const { dir, script } = makeProject(t);
-  const stateFile = join(dir, ".opencode", "goal.json");
+  const stateFile = join(dir, ".crizon", "goal.json");
 
   run(script, dir, ["set", "x"]);
   run(script, dir, ["item", "add", "việc ok", "--verify", "node verify-ok.js"]);
@@ -167,7 +167,7 @@ test("goal.mjs: item done tự chạy verify — fail thì chặn (exit 5)", (t)
 
 test("goal.mjs: ngân sách token — chặn khi vượt, clear + resume để tiếp", (t) => {
   const { dir, script } = makeProject(t);
-  const stateFile = join(dir, ".opencode", "goal.json");
+  const stateFile = join(dir, ".crizon", "goal.json");
 
   run(script, dir, ["set", "x"]);
   run(script, dir, ["budget", "set", "--tokens", "5"]);
@@ -193,7 +193,7 @@ test("goal.mjs: ngân sách token — chặn khi vượt, clear + resume để t
 
 test("goal.mjs: ngân sách bước — done đủ bước thì chặn", (t) => {
   const { dir, script } = makeProject(t);
-  const stateFile = join(dir, ".opencode", "goal.json");
+  const stateFile = join(dir, ".crizon", "goal.json");
 
   run(script, dir, ["set", "x"]);
   run(script, dir, ["item", "add", "việc 1"]);
@@ -218,7 +218,7 @@ test("goal.mjs: ngân sách bước — done đủ bước thì chặn", (t) => 
 
 test("goal.mjs: state có version + migrate file cũ không version", (t) => {
   const { dir, script } = makeProject(t);
-  const stateFile = join(dir, ".opencode", "goal.json");
+  const stateFile = join(dir, ".crizon", "goal.json");
 
   run(script, dir, ["set", "x"]);
   assert.equal(JSON.parse(readFileSync(stateFile, "utf8")).version, 1, "state mới có version");
@@ -232,7 +232,7 @@ test("goal.mjs: state có version + migrate file cũ không version", (t) => {
 
 test("goal.mjs: chế độ duyệt — chặn thi hành tới khi approve (exit 7)", (t) => {
   const { dir, script } = makeProject(t);
-  const stateFile = join(dir, ".opencode", "goal.json");
+  const stateFile = join(dir, ".crizon", "goal.json");
 
   run(script, dir, ["set", "có duyệt", "--review"]);
   run(script, dir, ["item", "add", "việc 1"]);
@@ -255,7 +255,7 @@ test("goal.mjs: chế độ duyệt — chặn thi hành tới khi approve (exit
 
 test("goal.mjs: item fail 2 lần liên tiếp → tự block + chặn thi hành (exit 8)", (t) => {
   const { dir, script } = makeProject(t);
-  const stateFile = join(dir, ".opencode", "goal.json");
+  const stateFile = join(dir, ".crizon", "goal.json");
 
   run(script, dir, ["set", "x"]);
   run(script, dir, ["item", "add", "việc 1"]);

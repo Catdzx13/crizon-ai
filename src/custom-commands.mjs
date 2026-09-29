@@ -1,5 +1,5 @@
 /**
- * Custom slash commands kiểu OpenCode (docs/commands):
+ * Custom slash commands kiểu TUI Crizon (docs/commands):
  * - File markdown: global `~/.config/opencode/commands/` + `~/.crizon-ai/commands/`,
  *   project `<cwd>/.opencode/commands/` + `<cwd>/.crizon/commands/` (tên file = tên lệnh).
  * - Frontmatter: description, agent, model (agent bỏ qua ở CLI này).

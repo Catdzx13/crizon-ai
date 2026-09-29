@@ -1,4 +1,4 @@
-name: Build TUI binaries (OpenCode việt hoá)
+name: Build TUI binaries (Crizon)
 
 on:
   workflow_dispatch:
@@ -9,10 +9,10 @@ permissions:
   contents: write
 
 env:
-  OPENCODE_REPO: https://github.com/anomalyco/opencode.git
-  # Commit upstream mà từ điển việt hoá đã được kiểm chứng (đổi khi nâng cấp OpenCode).
-  OPENCODE_COMMIT: b471c2b4495747353af768fbf2e0790c9d820ce2
-  OPENCODE_SOURCE: ${{ github.workspace }}/opencode-src
+  # Nguồn TUI (biến repo — đổi khi nâng cấp): CRIZON_TUI_UPSTREAM_REPO / CRIZON_TUI_UPSTREAM_COMMIT
+  TUI_REPO: ${{ vars.CRIZON_TUI_UPSTREAM_REPO }}
+  TUI_COMMIT: ${{ vars.CRIZON_TUI_UPSTREAM_COMMIT }}
+  CRIZON_TUI_SOURCE: ${{ github.workspace }}/tui-src
 
 jobs:
   build:
@@ -23,15 +23,15 @@ jobs:
       matrix:
         include:
           - runner: windows-latest
-            asset: opencode-windows-x64.exe
+            asset: crizon-tui-windows-x64.exe
           - runner: ubuntu-24.04-arm
-            asset: opencode-linux-arm64
+            asset: crizon-tui-linux-arm64
           - runner: ubuntu-latest
-            asset: opencode-linux-x64
+            asset: crizon-tui-linux-x64
           - runner: macos-14 # Apple Silicon (arm64)
-            asset: opencode-darwin-arm64
+            asset: crizon-tui-darwin-arm64
           - runner: macos-13 # Intel (x64)
-            asset: opencode-darwin-x64
+            asset: crizon-tui-darwin-x64
     steps:
       - uses: actions/checkout@v4
 
@@ -39,32 +39,34 @@ jobs:
         with:
           bun-version: 1.3.14
 
-      - name: Clone OpenCode tại commit ghim
+      - name: Clone TUI source (commit ghim)
         shell: bash
         run: |
           set -euo pipefail
-          git clone --filter=blob:none "$OPENCODE_REPO" "$OPENCODE_SOURCE"
-          git -C "$OPENCODE_SOURCE" checkout "$OPENCODE_COMMIT"
+          test -n "$TUI_REPO"
+          test -n "$TUI_COMMIT"
+          git clone --filter=blob:none "$TUI_REPO" "$CRIZON_TUI_SOURCE"
+          git -C "$CRIZON_TUI_SOURCE" checkout "$TUI_COMMIT"
 
       - name: Cài phụ thuộc (bun install)
         shell: bash
-        working-directory: ${{ env.OPENCODE_SOURCE }}
+        working-directory: ${{ env.CRIZON_TUI_SOURCE }}
         run: bun install
 
       - name: Áp từ điển việt hoá (idempotent)
         shell: bash
-        run: node tools/opencode-vi/patch.mjs
+        run: node tools/tui-vi/patch.mjs
 
-      - name: Build host target (kèm smoke test --version của OpenCode)
+      - name: Build host target (kèm smoke test --version)
         shell: bash
-        working-directory: ${{ env.OPENCODE_SOURCE }}/packages/opencode
+        working-directory: ${{ env.CRIZON_TUI_SOURCE }}/packages/opencode
         run: bun run script/build.ts --single --skip-embed-web-ui --skip-install
 
       - name: Thu binary
         shell: bash
         run: |
           set -euo pipefail
-          src=$(find "$OPENCODE_SOURCE/packages/opencode/dist" -type f -path "*/bin/opencode*" | head -n1)
+          src=$(find "$CRIZON_TUI_SOURCE/packages/opencode/dist" -type f -path "*/bin/opencode*" | head -n1)
           test -n "$src"
           echo "built: $src ($(du -h "$src" | cut -f1))"
           mkdir -p out

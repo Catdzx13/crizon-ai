@@ -13,8 +13,8 @@ function makeFixture(t, state) {
   const pluginFile = join(dir, "goal-plugin.mjs");
   writeFileSync(pluginFile, goalPluginSource());
   writeFileSync(join(dir, "opencode-goal.mjs"), goalScriptSource());
-  mkdirSync(join(dir, ".opencode"), { recursive: true });
-  if (state) writeFileSync(join(dir, ".opencode", "goal.json"), `${JSON.stringify(state, null, 2)}\n`);
+  mkdirSync(join(dir, ".crizon"), { recursive: true });
+  if (state) writeFileSync(join(dir, ".crizon", "goal.json"), `${JSON.stringify(state, null, 2)}\n`);
   return { dir, pluginFile };
 }
 
@@ -95,13 +95,13 @@ test("goal-plugin: tool `goal` có type + gọi đúng script (không cần zod)
   assert.match(set.output, /hoàn tất GĐ1/);
   await tool.execute({ action: "item_add", note: "việc 1", verify: "node -v" }, { directory: dir });
   await tool.execute({ action: "item_start", index: 1 }, { directory: dir });
-  const state = JSON.parse(readFileSync(join(dir, ".opencode", "goal.json"), "utf8"));
+  const state = JSON.parse(readFileSync(join(dir, ".crizon", "goal.json"), "utf8"));
   assert.equal(state.objective, "hoàn tất GĐ1");
   assert.equal(state.checklist[0].status, "in_progress");
 
   await tool.execute({ action: "item_fail", index: 1, note: "lỗi A" }, { directory: dir });
   await tool.execute({ action: "item_fail", index: 1, note: "lỗi B" }, { directory: dir });
-  const blocked = JSON.parse(readFileSync(join(dir, ".opencode", "goal.json"), "utf8"));
+  const blocked = JSON.parse(readFileSync(join(dir, ".crizon", "goal.json"), "utf8"));
   assert.equal(blocked.status, "blocked", "fail 2 lần qua tool → tự block");
   const denied = await tool.execute({ action: "item_start", index: 1 }, { directory: dir });
   assert.match(denied.output, /\[exit 8\]/, "bị chặn thì output kèm exit code");
@@ -111,7 +111,7 @@ test("goal-plugin: đếm token từ part step-finish, dedup theo part id, chỉ
   const { dir, pluginFile } = makeFixture(t, ACTIVE_STATE);
   const mod = await loadPlugin(t, pluginFile);
   const hooks = await mod.server({ directory: dir });
-  const stateFile = join(dir, ".opencode", "goal.json");
+  const stateFile = join(dir, ".crizon", "goal.json");
 
   const part = { id: "prt_1", type: "step-finish", tokens: { input: 10, output: 5, reasoning: 2, cache: { read: 0, write: 0 } } };
   await hooks.event({ event: { type: "message.part.updated", properties: { sessionID: "ses_1", part } } });

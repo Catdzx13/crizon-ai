@@ -1,8 +1,8 @@
-/** Màn chào kiểu OpenCode/Gemini CLI: wordmark nửa ô + phiên bản + tips + info phiên. */
+/** Màn chào kiểu TUI Crizon/Gemini CLI: wordmark nửa ô + phiên bản + tips + info phiên. */
 import { t } from "./i18n.mjs";
 import { colorEnabled, paint } from "./ui.mjs";
 
-// Kiểu OpenCode (packages/tui/src/logo.ts): chữ khối nửa ô 3 dòng, viền dưới ▀▀▀▀.
+// Kiểu TUI Crizon (packages/tui/src/logo.ts): chữ khối nửa ô 3 dòng, viền dưới ▀▀▀▀.
 const FONT_OC = {
   C: ["█▀▀▀", "█___", "▀▀▀▀"],
   R: ["█▀▀▄", "█▀▀_", "▀__▀"],

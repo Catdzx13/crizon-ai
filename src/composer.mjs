@@ -62,7 +62,7 @@ export function createComposer(io, { footer = "", meta = "", history = [], place
     return `  ${leftShown}${" ".repeat(gap)}${rightShown}`;
   }
 
-  /** Gợi ý lệnh khi gõ "/" — lọc theo tiền tố (kiểu autocomplete của OpenCode). */
+  /** Gợi ý lệnh khi gõ "/" — lọc theo tiền tố (kiểu autocomplete của TUI Crizon). */
   function activeSuggestions() {
     const query = state.buffer;
     if (!query.startsWith("/") || query.includes(" ") || !state.commands.length) return [];

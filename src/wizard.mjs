@@ -60,7 +60,7 @@ export async function runWizard({ env = process.env, io, uiFns = uiReal } = {}) 
     { code: "chat", label: t("wizard.modeChat") },
     { code: "claude", label: t("wizard.modeClaude") },
     { code: "codex", label: t("wizard.modeCodex") },
-    { code: "opencode", label: t("wizard.modeOpencode") },
+    { code: "tui", label: t("wizard.modeTui") },
   ];
   const modePick = await uiFns.select(io, modes, { title: `${t("wizard.modeTitle")}  ${t("wizard.modeNote")}` });
   const harness = modePick?.item?.code || "chat";
@@ -70,6 +70,6 @@ export async function runWizard({ env = process.env, io, uiFns = uiReal } = {}) 
   io.out(t("wizard.saved", { path }));
   if (savedUnverified) io.out(t("login.unverified", { err: t("err.unreachableMsg", { base: cfg.baseUrl }) }));
   if (harness === "chat") io.out(t("wizard.done"));
-  else io.out(t("wizard.modePending", { harness: { claude: "Claude Code", codex: "Codex", opencode: "OpenCode" }[harness] ?? harness }));
+  else io.out(t("wizard.modePending", { harness: { claude: "Claude Code", codex: "Codex", tui: "TUI Crizon" }[harness] ?? harness }));
   return { lang, apiKey, harness };
 }

@@ -22,7 +22,7 @@ function helpText() {
     `  crizon-ai doctor [--json]                  ${t("help.cmdDoctor")}`,
     `  crizon-ai logs [--limit N] [--clear]       ${t("help.cmdLogs")}`,
     `  crizon-ai roles [list|add|rm]              ${t("help.cmdRoles")}`,
-    `  crizon-ai setup claude|codex|opencode|aider|qwen   ${t("help.cmdSetup")}`,
+    `  crizon-ai setup claude|codex|tui|aider|qwen      ${t("help.cmdSetup")}`,
     `  crizon-ai disconnect <harness>            ${t("help.cmdDisconnect")}`,
     `  crizon-ai env [--shell powershell]         ${t("help.cmdEnv")}`,
     `  crizon-ai config [--check]                 ${t("help.cmdConfig")}`,

@@ -63,9 +63,9 @@ test("crizon-doctor: ✓ khi gateway /models trả OK + có goal state", async (
   const port = server.address().port;
   const configPath = writeConfig(dir, `http://127.0.0.1:${port}/v1`);
 
-  mkdirSync(join(dir, ".opencode"), { recursive: true });
+  mkdirSync(join(dir, ".crizon"), { recursive: true });
   writeFileSync(
-    join(dir, ".opencode", "goal.json"),
+    join(dir, ".crizon", "goal.json"),
     `${JSON.stringify({ version: 1, objective: "hoàn tất GĐ1", status: "active" }, null, 2)}\n`,
   );
 

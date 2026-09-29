@@ -287,7 +287,7 @@ export function panel(io, title, lines = []) {
   for (const line of box(title, lines, { width: Math.min(widest, columns - 6) })) io.out(line);
 }
 
-/** Dòng có nền (band) kiểu OpenCode: nội dung + padding tô cùng màu nền. */
+/** Dòng có nền (band) kiểu TUI Crizon: nội dung + padding tô cùng màu nền. */
 export function bandLine(text, width, { bg = 236, fg = null, enabled = true } = {}) {
   const value = String(text ?? "");
   const fill = " ".repeat(Math.max(0, width - visibleLen(value)));
