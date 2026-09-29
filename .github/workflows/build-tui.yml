@@ -60,6 +60,8 @@ jobs:
       - name: Build host target (kèm smoke test --version)
         shell: bash
         working-directory: ${{ env.CRIZON_TUI_SOURCE }}/packages/opencode
+        env:
+          OPENCODE_CHANNEL: dev # để version có dạng 0.0.0-dev-<ts> thay vì 0.0.0--<ts>
         run: bun run script/build.ts --single --skip-embed-web-ui --skip-install
 
       - name: Thu binary
