@@ -90,7 +90,9 @@ Gateway cũng map sẵn: Claude Code gửi `thinking.budget_tokens` → 3 bậc;
 
 ### TUI OpenCode việt hoá (Crizon) — chạy & đóng gói 1 file
 
-- **Chạy**: `node tools/demo-opencode.mjs` — ưu tiên **binary việt hoá** đã đóng gói, không có thì chạy từ source;
+- **Chạy nhanh**: `crizon-ai tui` — nếu chưa có binary sẽ **tự tải từ GitHub Releases** (~138 MB, Windows x64)
+  vào `~/.crizon-ai/bin/` rồi mở (bỏ qua bằng `--no-download`; đổi nguồn bằng `CRIZON_TUI_DOWNLOAD_BASE`).
+- **Chạy từ repo**: `node tools/demo-opencode.mjs` — ưu tiên binary đã có, không có thì chạy từ source;
   `--source` ép chạy source, `--binary` quay về OpenCode gốc (`CRIZON_OPENCODE_VI_BIN` để trỏ binary khác).
 - **Đóng gói** (khách không cần Bun): `node tools/build-opencode-vi.mjs --skip-install`
   → `apps/ai-cli/dist/opencode/<os>-<arch>/opencode[.exe]` (~138 MB, đã bỏ Web UI nhúng; upstream 172 MB).
