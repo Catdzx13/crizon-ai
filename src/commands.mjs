@@ -15,6 +15,7 @@ import { openUrl, portalKeysUrl } from "./open-url.mjs";
 import { getLang, LANGS, setLang, t, tIn } from "./i18n.mjs";
 import { appendLog, clearLogs, readLogs } from "./logs.mjs";
 import { clearSession, listSessions, loadSession, saveSession } from "./sessions.mjs";
+import { recapSession } from "./recap.mjs";
 import {
   MarkdownStream,
   SYM,
@@ -409,6 +410,41 @@ export async function cmdAsk({ flags = {}, env = process.env, io = defaultIo(), 
   }
 }
 
+/** Tóm tắt catch-up phiên (recap kiểu Codex) — request tạm, không ghi vào phiên. */
+export async function cmdRecap({ flags = {}, env = process.env, io = defaultIo() } = {}) {
+  const cfg = resolveConfig({ flags, env });
+  if (!cfg.apiKey) {
+    io.out(`${SYM.err} ${t("err.noKey")}`);
+    return 2;
+  }
+  const sessionName = String(flags.session || "default");
+  const session = loadSession(env, sessionName);
+  if (!session.messages.length) {
+    io.out(t("recap.empty", { name: session.name }));
+    return 0;
+  }
+  const client = makeClient(cfg);
+  try {
+    const model = await pickModel(client, cfg, flags.model || cfg.model || session.model);
+    const result = await recapSession({ client, model, messages: session.messages });
+    if (flags.json) {
+      io.out(JSON.stringify({ session: session.name, model, ...result }, null, 2));
+      return 0;
+    }
+    io.out(`${SYM.on} ${t("recap.title")}`);
+    io.out(result.summary);
+    if (result.nextAction) {
+      io.out("");
+      io.out(`${SYM.on} ${t("recap.next")}`);
+      io.out(result.nextAction);
+    }
+    return 0;
+  } catch (err) {
+    io.out(`${SYM.err} ${explainError(err)}`);
+    return 1;
+  }
+}
+
 /* ------------------------------ settings menu ---------------------------- */
 
 export async function settingsMenu({ env = process.env, io = defaultIo(), ui = {}, flags = {} } = {}) {
@@ -553,6 +589,7 @@ const CHAT_COMMANDS = [
   { name: "/rename", key: "cmd.rename" },
   { name: "/undo", key: "cmd.undo" },
   { name: "/export", key: "cmd.export" },
+  { name: "/recap", key: "cmd.recap" },
   { name: "/status", key: "cmd.status" },
   { name: "/clear", key: "cmd.clear" },
   { name: "/exit", key: "cmd.exit" },
@@ -898,6 +935,26 @@ export async function cmdChat({ flags = {}, env = process.env, io = defaultIo(),
           emit(t("chat.exported", { path: file }));
         } catch (error) {
           emit(`${SYM.err} ${error?.message || error}`);
+        }
+        continue;
+      }
+      if (text === "/recap") {
+        emit(t("chat.recapRunning"));
+        try {
+          const result = await recapSession({ client, model, messages });
+          if (!result.ok) {
+            emit(t("chat.recapEmpty"));
+          } else {
+            emit(`${SYM.on} ${t("chat.recapTitle")}`);
+            emit(result.summary);
+            if (result.nextAction) {
+              emit("");
+              emit(`${SYM.on} ${t("chat.recapNext")}`);
+              emit(result.nextAction);
+            }
+          }
+        } catch (error) {
+          emit(`${SYM.err} ${explainError(error)}`);
         }
         continue;
       }

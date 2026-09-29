@@ -21,6 +21,7 @@ function helpText() {
     `  crizon-ai language [vi|en|ko]              ${t("help.cmdLanguage")}`,
     `  crizon-ai doctor [--json]                  ${t("help.cmdDoctor")}`,
     `  crizon-ai logs [--limit N] [--clear]       ${t("help.cmdLogs")}`,
+    `  crizon-ai recap [--session <tên>] [--json]  ${t("help.cmdRecap")}`,
     `  crizon-ai roles [list|add|rm]              ${t("help.cmdRoles")}`,
     `  crizon-ai setup claude|codex|tui|aider|qwen      ${t("help.cmdSetup")}`,
     `  crizon-ai disconnect <harness>            ${t("help.cmdDisconnect")}`,
@@ -94,6 +95,8 @@ export async function main(argv = []) {
         return await cmd.cmdLanguage({ flags, io });
       case "doctor":
         return await cmd.cmdDoctor({ flags, io });
+      case "recap":
+        return await cmd.cmdRecap({ flags, io });
       case "logs":
         return await cmd.cmdLogs({ flags, io });
       case "roles":

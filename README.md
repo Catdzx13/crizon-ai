@@ -29,6 +29,7 @@ crizon-ai tui
 
 - **TUI Crizon** — giao diện chat/lập trình trong terminal, việt hoá toàn bộ, logo & thương hiệu Crizon.
 - **Goal loop `/goal`** — giao việc theo mục tiêu: kế hoạch + tiêu chí nghiệm thu, todo ngay trong phiên, ngân sách thời gian/token/bước, tự chạy lệnh kiểm chứng.
+- **Recap `/recap`** — quay lại sau vẫn nắm ngay tiến độ: tóm tắt 40–60 từ (mục tiêu · đã xong · blocker · việc kế tiếp), không ghi vào hội thoại.
 - **Mức tư duy theo model** — `tắt · nhanh · cân-bằng · sâu` (đổi nhanh bằng `ctrl+t`).
 - **1 key dùng mọi model** — không khoá model theo key; chọn model ngay trong CLI (`crizon-ai models`, `/model`, `--model <id>`).
 - **1 key dùng cho nhiều CLI** — kết nối Claude Code, Codex, TUI Crizon, Aider, Qwen bằng cùng một API key Crizon.
@@ -58,6 +59,7 @@ crizon-ai chat                 # phiên chat dài, tự lưu lịch sử
 | `crizon-ai chat [--session <tên>]` | Phiên chat nhiều lượt |
 | `crizon-ai setup claude\|codex\|tui\|aider\|qwen` | Kết nối CLI/harness với API Crizon |
 | `crizon-ai doctor` | Chẩn đoán kết nối, key, model, harness |
+| `crizon-ai recap [--session <tên>]` | **Tóm tắt catch-up phiên** (kiểu Codex `/recap`): mục tiêu · đã xong · blocker · việc kế tiếp |
 | `crizon-ai logs` · `roles` · `settings` · `config` · `logout` | Nhật ký · system prompt tái sử dụng · cài đặt · cấu hình |
 
 ## Nền tảng hỗ trợ
@@ -88,6 +90,7 @@ Trong chat: `/model` · Trong TUI: `ctrl+x m` (hoặc `/variants` để đổi m
 - Khởi động: `crizon-ai tui` — mở trong thư mục dự án hiện tại.
 - Mục tiêu: `/goal <mục tiêu>` · `/goal pause|resume|complete|clear` · `/goal budget <phút>`.
 - Chẩn đoán: `/doctor` — kiểm tra key, gateway, model, goal ngay trong TUI.
+- Tóm tắt nhanh: **`/recap`** — catch-up 40–60 từ khi quay lại (mục tiêu · đã xong · blocker · việc kế tiếp).
 - `Ctrl+P` mở bảng lệnh, `Tab` đổi agent, `Esc` dừng trả lời.
 - Trạng thái mục tiêu lưu theo dự án tại `.crizon/goal.json`.
 

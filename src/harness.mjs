@@ -237,6 +237,15 @@ export function renderOpencodeConfig(cfg, modelIds = [], options = {}) {
           .replaceAll("__DOCTOR_SCRIPT__", options.doctorScript || ".opencode/crizon-doctor.mjs")
           .replaceAll("__CONFIG_PATH__", options.configPath || "opencode.json"),
       },
+      recap: {
+        description: "Tóm tắt catch-up phiên hiện tại (kiểu Codex /recap): mục tiêu · đã xong · blocker · việc kế tiếp",
+        template: [
+          "Đọc hội thoại hiện tại và tạo RECAP catch-up cho người dùng quay lại:",
+          "1) Tóm tắt 40–60 từ (tối đa 80): mục tiêu đang làm · việc đã hoàn thành THỰC SỰ · blocker/hạn chế còn treo (chưa deploy, chưa kiểm chứng…).",
+          "2) Việc kế tiếp: chỉ nêu câu hỏi chưa trả lời, bước đã thống nhất, hoặc cách gỡ blocker; nếu không có thì ghi “không có”.",
+          "Giữ đúng ngôn ngữ của người dùng; phân biệt rõ đề xuất / đã làm / đã test / đã phát hành; không bịa việc.",
+        ].join("\n"),
+      },
     },
     agent: {
       "goal-runner": {
