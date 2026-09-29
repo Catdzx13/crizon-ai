@@ -292,7 +292,7 @@ test("tui: config provider Crizon + setup/disconnect", async (t) => {
   assert.deepEqual(variants["tắt"], { thinking: { type: "disabled" } });
   assert.equal(variants["nhanh"].reasoningEffort, "low");
   assert.equal(variants["sâu"].reasoningEffort, "max");
-  assert.equal(sample.share, "disabled", "không đẩy session lên opencode.ai");
+  assert.equal(sample.share, "disabled", "không đẩy session lên dịch vụ ngoài");
   assert.equal(sample.command.goal.agent, "goal-runner");
   assert.equal(sample.command.goal.subtask, false, "chạy ở phiên chính để hiện thanh nhiệm vụ (giống Claude/Codex)");
   assert.match(sample.command.goal.template, /\$ARGUMENTS/);

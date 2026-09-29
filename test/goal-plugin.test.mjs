@@ -12,7 +12,7 @@ function makeFixture(t, state) {
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   const pluginFile = join(dir, "goal-plugin.mjs");
   writeFileSync(pluginFile, goalPluginSource());
-  writeFileSync(join(dir, "opencode-goal.mjs"), goalScriptSource());
+  writeFileSync(join(dir, "tui-goal.mjs"), goalScriptSource());
   mkdirSync(join(dir, ".crizon"), { recursive: true });
   if (state) writeFileSync(join(dir, ".crizon", "goal.json"), `${JSON.stringify(state, null, 2)}\n`);
   return { dir, pluginFile };

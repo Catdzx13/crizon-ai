@@ -23,7 +23,7 @@ const writePage = openBrowser || argv.includes("--page") || argv.includes("--htm
 const pagePath = flagValue("--page-path") || join(tmpdir(), "crizon-status.html");
 
 const home = process.env.CRIZON_HOME || join(process.env.USERPROFILE || process.env.HOME || "", ".crizon-ai");
-const configPath = flagValue("--config") || process.env.OPENCODE_CONFIG || join(home, "harness", "opencode.json");
+const configPath = flagValue("--config") || process.env.OPENCODE_CONFIG || join(home, "harness", "tui.json");
 
 const rows = [];
 const ok = (label, detail = "") => rows.push(`✓ ${label}${detail ? ` — ${detail}` : ""}`);
@@ -52,7 +52,7 @@ if (config) {
   else bad("Provider crizon", "thiếu khối provider.crizon");
 
   if (provider) ok("Model khả dụng", `${modelCount} model trong config`);
-  ok("Lệnh /goal", config.command?.goal ? "đã cấu hình" : "thiếu (chạy lại: crizon-ai setup opencode)");
+  ok("Lệnh /goal", config.command?.goal ? "đã cấu hình" : "thiếu (chạy lại: crizon-ai setup tui)");
   ok("Lệnh /crizon", config.command?.crizon ? "đã cấu hình" : "thiếu");
   ok("Agent goal-runner", config.agent?.["goal-runner"] ? "đã cấu hình" : "thiếu");
   info("Share", config.share === "disabled" ? "đã tắt (an toàn)" : `đang là "${config.share}"`);

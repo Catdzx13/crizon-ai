@@ -3,7 +3,7 @@
  * Plugin thương hiệu Crizon cho TUI Crizon.
  * - Slot home_logo: wordmark line-art + subtitle, hiệu ứng shimmer + chấm nhấp nháy.
  * - Lệnh /language (và /lang): dialog chọn vi/en, đổi subtitle ngay trong phiên.
- * i18n: vi / en (mặc định từ CRIZON_LANG do `crizon-ai setup opencode` ghi vào env).
+ * i18n: vi / en (mặc định từ CRIZON_LANG do `crizon-ai setup tui` ghi vào env).
  * Chỉ dùng solid-js + API plugin chính thức (không node builtins) để load an toàn.
  */
 import { For, createSignal, onCleanup } from "solid-js"

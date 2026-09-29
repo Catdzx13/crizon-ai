@@ -67,7 +67,7 @@ let cwd = process.cwd();
 
 if (!real) {
   mock = await startMockGateway({ port: 0, quiet: true });
-  dir = mkdtempSync(join(tmpdir(), "opencode-vi-demo-"));
+  dir = mkdtempSync(join(tmpdir(), "crizon-tui-demo-"));
   env = {
     ...process.env,
     CRIZON_BASE_URL: mock.baseUrl,
@@ -80,9 +80,9 @@ if (!real) {
     XDG_CONFIG_HOME: join(dir, "xdg-config"),
   };
   cwd = dir;
-  const setup = spawn(process.execPath, [CLI, "setup", "opencode"], { env, stdio: "ignore" });
+  const setup = spawn(process.execPath, [CLI, "setup", "tui"], { env, stdio: "ignore" });
   await new Promise((resolve) => setup.on("close", resolve));
-  env.OPENCODE_CONFIG = join(dir, "home", "harness", "opencode.json");
+  env.OPENCODE_CONFIG = join(dir, "home", "harness", "tui.json");
   env.OPENCODE_TUI_CONFIG = join(dir, "home", "harness", "opencode-tui.json");
   console.log(`  demo · mock gateway ${mock.baseUrl} · config tạm (cô lập)`);
 } else {

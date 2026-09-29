@@ -5,7 +5,7 @@
  *   node apps/ai-cli/tools/build-tui.mjs                  # vá từ điển + build + copy artifact
  *   node apps/ai-cli/tools/build-tui.mjs --skip-install   # bỏ bun install cross-platform (nhanh)
  *   node apps/ai-cli/tools/build-tui.mjs --no-patch       # không áp lại từ điển
- *   node apps/ai-cli/tools/build-tui.mjs --out <dir>      # nơi copy (mặc định apps/ai-cli/dist/opencode/<os>-<arch>)
+ *   node apps/ai-cli/tools/build-tui.mjs --out <dir>      # nơi copy (mặc định apps/ai-cli/dist/tui/<os>-<arch>)
  *   node apps/ai-cli/tools/build-tui.mjs --json           # in JSON { path, out, size, version }
  *   node apps/ai-cli/tools/build-tui.mjs --no-copy        # chỉ build, không copy
  *
@@ -34,7 +34,7 @@ if (args.includes("--help")) {
   console.log(`Dùng: node apps/ai-cli/tools/build-tui.mjs [--skip-install] [--no-patch] [--out <dir>] [--no-copy] [--json]
 
 Quy trình: áp từ điển việt hoá (idempotent) → bun build (--single --skip-embed-web-ui)
-→ kiểm tra --version → copy binary ra apps/ai-cli/dist/opencode/<os>-<arch>/.
+→ kiểm tra --version → copy binary ra apps/ai-cli/dist/tui/<os>-<arch>/.
 Bun bắt buộc cho bước build; binary thành phẩm KHÔNG cần Bun khi chạy.`);
   process.exit(0);
 }

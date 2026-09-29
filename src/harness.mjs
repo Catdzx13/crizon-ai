@@ -201,7 +201,7 @@ export function renderOpencodeConfig(cfg, modelIds = [], options = {}) {
   const models = {};
   for (const id of ids) models[id] = { name: id, variants: { ...variants } };
   const first = ids.includes(cfg.model) ? cfg.model : ids[0];
-  const goalScript = options.goalScript || ".opencode/goal.mjs";
+  const goalScript = options.goalScript || ".crizon/goal.mjs";
   return `${JSON.stringify({
     $schema: "https://opencode.ai/config.json",
     provider: {

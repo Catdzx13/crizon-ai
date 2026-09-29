@@ -6,8 +6,8 @@
  *   node apps/ai-cli/tools/demo-tui.mjs --binary        → dùng bản nhị phân TUI Crizon cũ
  *   node apps/ai-cli/tools/demo-tui.mjs "xin chào"      → chạy 1 câu (không tương tác)
  *
- * Tự động: mở mock gateway → `crizon-ai setup opencode` với config/home/profile TẠM
- * (không đụng TUI Crizon hay cấu hình thật của bạn) → chạy `opencode --standalone`.
+ * Tự động: mở mock gateway → `crizon-ai setup tui` với config/home/profile TẠM
+ * (không đụng TUI Crizon hay cấu hình thật của bạn) → chạy `crizon-ai tui`.
  * Thoát là tự dọn dẹp.
  */
 import { spawn } from "node:child_process";
@@ -22,8 +22,8 @@ import { applyDictionary } from "./tui-vi/patch.mjs";
 const here = dirname(fileURLToPath(import.meta.url));
 const cli = join(here, "..", "bin", "crizon-ai.mjs");
 
-// Ưu tiên bản opencode-ai (sst 1.18.x) đã cài riêng — bản này hỗ trợ plugin thương hiệu TUI.
-// Đặt CRIZON_TUI_BIN để trỏ binary TUI khác (mặc định: bản cài cũ trong ~/crizon-opencode).
+// Ưu tiên bản nhị phân cũ đã cài riêng (nếu có) — bản này hỗ trợ plugin thương hiệu TUI.
+// Đặt CRIZON_TUI_BIN để trỏ binary TUI khác (mặc định: bản cài cũ trên máy, nếu có).
 const brandedCandidate = process.env.CRIZON_TUI_BIN || process.env.CRIZON_OPENCODE_BIN
   || join(process.env.USERPROFILE || homedir(), "crizon-opencode", "opencode.cmd");
 const opencodeBin = existsSync(brandedCandidate) ? brandedCandidate : "opencode";

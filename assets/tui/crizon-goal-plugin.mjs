@@ -33,7 +33,7 @@ function stateFile(directory) {
 
 /** Script goal.mjs nằm cạnh plugin (setup copy cùng thư mục harness). */
 function goalScriptPath() {
-  return join(dirname(fileURLToPath(import.meta.url)), "opencode-goal.mjs");
+  return join(dirname(fileURLToPath(import.meta.url)), "tui-goal.mjs");
 }
 
 const GOAL_ACTIONS = [

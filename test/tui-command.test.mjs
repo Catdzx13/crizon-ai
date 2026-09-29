@@ -68,7 +68,7 @@ test("tui: mở binary với OPENCODE_CONFIG/TUI_CONFIG + chuyển tiếp tham s
     env,
     io,
     deps: {
-      resolveBinary: () => "C:/gia/opencode.exe",
+      resolveBinary: () => "C:/gia/crizon-tui.exe",
       spawn: (bin, args, opts) => {
         calls.push({ bin, args, opts });
         return child;
@@ -77,7 +77,7 @@ test("tui: mở binary với OPENCODE_CONFIG/TUI_CONFIG + chuyển tiếp tham s
   });
   assert.equal(code, 7);
   assert.equal(calls.length, 1);
-  assert.equal(calls[0].bin, "C:/gia/opencode.exe");
+  assert.equal(calls[0].bin, "C:/gia/crizon-tui.exe");
   assert.deepEqual(calls[0].args, ["run", "xin chào"]);
   assert.equal(calls[0].opts.env.OPENCODE_CONFIG, configPath);
   assert.equal(calls[0].opts.env.OPENCODE_TUI_CONFIG, tuiConfigPath);
@@ -120,10 +120,10 @@ test("tuiDownloadUrl: map asset theo nền tảng/kiến trúc", () => {
 test("downloadTuiBinary: tải + ghi file, lỗi rõ ràng", async (t) => {
   const { dir } = tempEnv();
   t.after(() => rmSync(dir, { recursive: true, force: true }));
-  const dest = join(dir, "bin", "opencode.exe");
+  const dest = join(dir, "bin", "crizon-tui.exe");
   const bytes = new Uint8Array([77, 90, 1, 2, 3]); // "MZ…"
   const size = await downloadTuiBinary({
-    url: "https://x.test/opencode.exe",
+    url: "https://x.test/crizon-tui.exe",
     dest,
     fetchImpl: async () => new Response(bytes, { status: 200 }),
   });

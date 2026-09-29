@@ -28,7 +28,7 @@ function run(script, dir, args, extraEnv = {}) {
 }
 
 function writeConfig(dir, baseURL) {
-  const configPath = join(dir, "opencode.json");
+  const configPath = join(dir, "tui.json");
   const config = {
     $schema: "https://opencode.ai/config.json",
     provider: {
