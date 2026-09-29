@@ -30,7 +30,7 @@ jobs:
             asset: crizon-tui-linux-x64
           - runner: macos-14 # Apple Silicon (arm64)
             asset: crizon-tui-darwin-arm64
-          - runner: macos-13 # Intel (x64)
+          - runner: macos-15-intel # Intel (x64) — macos-13 đã bị GitHub khai tử
             asset: crizon-tui-darwin-x64
     steps:
       - uses: actions/checkout@v4
