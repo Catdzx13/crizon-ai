@@ -41,7 +41,7 @@ test("tui: thiếu binary → hướng dẫn đóng gói (exit 2)", async (t) =>
   writeFileSync(configPath, "{}");
 
   const { io, lines } = makeIo();
-  const code = await cmdTui({ env, io, deps: { resolveBinary: () => "" } });
+  const code = await cmdTui({ flags: { "no-download": true }, env, io, deps: { resolveBinary: () => "" } });
   assert.equal(code, 2);
   assert.match(lines.join("\n"), /build-opencode-vi/);
 });
@@ -103,16 +103,18 @@ test("resolveTuiBinary: không có ứng viên nào → ''", () => {
   assert.equal(resolveTuiBinary({ flags: {}, env: { CRIZON_HOME: missing }, packageDir: missing, repoRoot: missing }), "");
 });
 
-test("tuiDownloadUrl: windows-x64 có asset, nền tảng khác chưa hỗ trợ", () => {
-  assert.equal(
-    tuiDownloadUrl({ env: {}, platform: "win32", arch: "x64" }),
-    "https://github.com/Catdzx13/crizon-ai/releases/latest/download/opencode-windows-x64.exe",
-  );
-  assert.equal(
-    tuiDownloadUrl({ env: { CRIZON_TUI_DOWNLOAD_BASE: "https://x.test/dl/" }, platform: "win32", arch: "x64" }),
-    "https://x.test/dl/opencode-windows-x64.exe",
-  );
-  assert.equal(tuiDownloadUrl({ env: {}, platform: "darwin", arch: "arm64" }), "");
+test("tuiDownloadUrl: map asset theo nền tảng/kiến trúc", () => {
+  const base = "https://x.test/dl";
+  const url = (platform, arch) => tuiDownloadUrl({ env: { CRIZON_TUI_DOWNLOAD_BASE: base }, platform, arch });
+  assert.equal(url("win32", "x64"), `${base}/opencode-windows-x64.exe`);
+  assert.equal(url("darwin", "arm64"), `${base}/opencode-darwin-arm64`);
+  assert.equal(url("darwin", "x64"), `${base}/opencode-darwin-x64`);
+  assert.equal(url("linux", "x64"), `${base}/opencode-linux-x64`);
+  assert.equal(url("linux", "arm64"), `${base}/opencode-linux-arm64`);
+  assert.equal(url("win32", "arm64"), "");
+  assert.equal(url("linux", "ia32"), "");
+  assert.equal(url("freebsd", "x64"), "");
+  assert.match(tuiDownloadUrl({ env: {}, platform: "linux", arch: "x64" }), /^https:\/\/github\.com\/Catdzx13\/crizon-ai\/releases\/latest\/download\//);
 });
 
 test("downloadTuiBinary: tải + ghi file, lỗi rõ ràng", async (t) => {

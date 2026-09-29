@@ -184,11 +184,20 @@ export function resolveTuiBinary(opts = {}) {
 /** Kho phát hành binary TUI (GitHub Releases mặc định; đổi bằng CRIZON_TUI_DOWNLOAD_BASE). */
 export const DEFAULT_TUI_DOWNLOAD_BASE = "https://github.com/Catdzx13/crizon-ai/releases/latest/download";
 
-/** URL asset cho nền tảng hiện tại — hiện có bản windows-x64; trả "" nếu chưa hỗ trợ. */
+/** Tên asset theo nền tảng/kiến trúc — trả "" nếu chưa hỗ trợ. */
+export function tuiAssetName({ platform = process.platform, arch = process.arch } = {}) {
+  if (platform === "win32") return arch === "x64" ? "opencode-windows-x64.exe" : "";
+  if (platform === "darwin") return arch === "arm64" ? "opencode-darwin-arm64" : arch === "x64" ? "opencode-darwin-x64" : "";
+  if (platform === "linux") return arch === "x64" ? "opencode-linux-x64" : arch === "arm64" ? "opencode-linux-arm64" : "";
+  return "";
+}
+
+/** URL asset cho nền tảng hiện tại — trả "" nếu chưa hỗ trợ. */
 export function tuiDownloadUrl({ env = process.env, platform = process.platform, arch = process.arch } = {}) {
+  const asset = tuiAssetName({ platform, arch });
+  if (!asset) return "";
   const base = String(env.CRIZON_TUI_DOWNLOAD_BASE || DEFAULT_TUI_DOWNLOAD_BASE).replace(/\/+$/, "");
-  const asset = platform === "win32" && arch === "x64" ? "opencode-windows-x64.exe" : "";
-  return asset ? `${base}/${asset}` : "";
+  return `${base}/${asset}`;
 }
 
 /** Tải binary TUI về `dest` (ghi file tạm rồi đổi tên). Trả số byte. */
