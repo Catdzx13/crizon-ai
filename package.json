@@ -1,0 +1,27 @@
+{
+  "name": "@crizon/ai-cli",
+  "version": "1.0.0",
+  "description": "Crizon AI CLI — dùng API AI CrizonShop từ terminal + TUI OpenCode việt hoá",
+  "type": "module",
+  "bin": {
+    "crizon-ai": "bin/crizon-ai.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Catdzx13/crizon-ai.git"
+  },
+  "homepage": "https://github.com/Catdzx13/crizon-ai#readme",
+  "keywords": [
+    "crizon",
+    "ai",
+    "cli",
+    "opencode",
+    "vi"
+  ]
+}
