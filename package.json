@@ -1,6 +1,6 @@
 {
   "name": "crizon-ai",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Crizon AI CLI — trợ lý AI CrizonShop trong terminal + TUI Crizon",
   "type": "module",
   "bin": {

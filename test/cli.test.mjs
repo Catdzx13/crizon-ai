@@ -201,3 +201,46 @@ test("cmdEnv: in biến môi trường powershell/bash", async () => {
   await cmdEnv({ flags: {}, env, io: bash.io });
   assert.ok(bash.lines.join("\n").includes('export OPENAI_API_KEY="czn_demo"'));
 });
+
+test("explainError: lý do cụ thể từ Gateway thay cho thông báo chung theo status", async () => {
+  const { explainError } = await import("../src/commands.mjs");
+  const { setLang } = await import("../src/i18n.mjs");
+  setLang("vi");
+  const busy = explainError(new ApiError(429, "concurrency_limit_exceeded", "Too many concurrent requests for the current plan", true));
+  assert.match(busy, /quá nhiều request chạy cùng lúc/);
+  assert.doesNotMatch(busy, /Hết hạn mức/);
+  const limit = explainError(new ApiError(429, "api_key_usage_limit_reached", "API key usage limit reached"));
+  assert.match(limit, /giới hạn usage riêng/);
+  assert.doesNotMatch(limit, /Key không hợp lệ/);
+  // Gateway cũ (không có lý do) vẫn dùng thông báo theo status.
+  assert.match(explainError(new ApiError(429, "quota_exceeded", "")), /Hết hạn mức/);
+  assert.match(explainError(new ApiError(401, "invalid_api_key", "")), /Key không hợp lệ/);
+});
+
+test("client.chatStream: frame lỗi giữa stream → ApiError, không trả về như câu trả lời hoàn chỉnh", async () => {
+  const body = 'data: {"choices":[{"delta":{"content":"Nửa câu"}}]}\n\n'
+    + 'data: {"error":{"code":"upstream_stream_ended","message":"Agent stream ended unexpectedly","retryable":true}}\n\n';
+  const client = new CrizonClient({
+    baseUrl: "https://example.test/v1",
+    apiKey: "czn_x",
+    fetchImpl: async () => new Response(body, { status: 200, headers: { "content-type": "text/event-stream" } }),
+  });
+  const deltas = [];
+  await assert.rejects(
+    client.chatStream({ model: "m", messages: [] }, (d) => deltas.push(d)),
+    (err) => err instanceof ApiError && err.code === "upstream_stream_ended" && err.retryable === true,
+  );
+  assert.deepEqual(deltas, ["Nửa câu"]);
+});
+
+test("cmdLogin: key bị Gateway từ chối thì không ghi đè key đang dùng", async (t) => {
+  const fixture = await startFixture();
+  t.after(() => fixture.server.close());
+  const env = tempEnv();
+  assert.equal(await cmdLogin({ flags: { key: "testkey", "base-url": fixture.baseUrl }, env, io: makeIo().io }), 0);
+  const bad = makeIo();
+  assert.equal(await cmdLogin({ flags: { key: "wrongkey", "base-url": fixture.baseUrl }, env, io: bad.io }), 1);
+  assert.match(bad.lines.join("\n"), /KHÔNG lưu/);
+  const { loadConfigFile } = await import("../src/config.mjs");
+  assert.equal(loadConfigFile(env).apiKey, "testkey");
+});

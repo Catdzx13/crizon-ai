@@ -63,7 +63,11 @@ export function explainError(err) {
   if (err instanceof ApiError) {
     const parts = [`${err.status ? `${err.status} ` : ""}${err.code}`];
     if (err.message && err.message !== err.code) parts.push(err.message);
-    if (err.status === 401) parts.push(`→ ${t("err.invalidKeyMsg")}`);
+    // Gateway gửi lý do cụ thể (hết gói, quá số request đồng thời, model ngoài gói…).
+    const reasonKey = `err.reason.${err.code}`;
+    const reason = t(reasonKey);
+    if (reason !== reasonKey) parts.push(`→ ${reason}`);
+    else if (err.status === 401) parts.push(`→ ${t("err.invalidKeyMsg")}`);
     else if (err.status === 402 || err.status === 429) parts.push(`→ ${t("err.quotaMsg")}`);
     else if (err.status === 503) parts.push(`→ ${t("err.busyMsg")}`);
     if (err.retryable) parts.push(t("err.retryable"));
@@ -135,17 +139,28 @@ export async function cmdLogin({ flags = {}, env = process.env, io = defaultIo()
   const baseUrl = String(flags["base-url"] || env.CRIZON_BASE_URL || file.baseUrl || "").trim();
   const next = { ...file, apiKey: key };
   if (baseUrl) next.baseUrl = baseUrl.replace(/\/+$/, "");
+  const cfg = resolveConfig({ flags, env });
+  // Kiểm tra trước khi lưu: key bị Gateway từ chối (401) không được ghi đè key đang chạy được.
+  // Lỗi mạng/Gateway bận vẫn lưu để dùng được khi kết nối lại.
+  let count = null;
+  let failure = null;
+  try {
+    count = (await modelIds(makeClient(cfg))).length;
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 401) {
+      io.out(t("login.rejected", { err: explainError(err) }));
+      return 1;
+    }
+    failure = err;
+  }
   const path = saveConfigFile(next, env);
   io.out(t("login.saved", { path }));
-  const cfg = resolveConfig({ flags, env });
-  try {
-    const count = (await modelIds(makeClient(cfg))).length;
-    io.out(t("login.valid", { count, base: cfg.baseUrl }));
-    return 0;
-  } catch (err) {
-    io.out(t("login.unverified", { err: explainError(err) }));
+  if (failure) {
+    io.out(t("login.unverified", { err: explainError(failure) }));
     return 1;
   }
+  io.out(t("login.valid", { count, base: cfg.baseUrl }));
+  return 0;
 }
 
 /** Mở trang tạo API key trong portal (không cần key sẵn). */

@@ -1,6 +1,6 @@
 import { t } from "./i18n.mjs";
 
-export const VERSION = "1.0.0";
+export const VERSION = "1.0.1";
 
 const useColor = Boolean(process.stdout.isTTY) && !process.env.NO_COLOR;
 const wrap = (code) => (s) => (useColor ? `\u001b[${code}m${s}\u001b[0m` : String(s));

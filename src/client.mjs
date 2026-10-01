@@ -102,6 +102,11 @@ export class CrizonClient {
         } catch {
           continue;
         }
+        // Gateway báo lỗi giữa stream bằng một frame envelope; không coi phần đã nhận là trả lời hoàn chỉnh.
+        if (json?.error && !json.choices) {
+          const e = json.error;
+          throw new ApiError(res.status, e.code || "stream_error", e.message, e.retryable === true, e.request_id ?? null, e.legacy_code ?? null);
+        }
         const choice = json?.choices?.[0];
         const delta = choice?.delta?.content ?? choice?.message?.content ?? "";
         if (delta) {

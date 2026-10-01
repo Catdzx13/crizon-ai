@@ -19,11 +19,14 @@
 # 1 lệnh cài
 npm i -g github:Catdzx13/crizon-ai
 
-# 1 lệnh khởi động — TUI Crizon (tự tải binary theo hệ điều hành lần đầu)
+# Lần đầu: chọn ngôn ngữ rồi dán API key (nhập ẩn, không lưu vào lịch sử shell)
+crizon-ai
+
+# Mở TUI Crizon (tự tải binary theo hệ điều hành lần đầu)
 crizon-ai tui
 ```
 
-> Chưa có key? Gõ `crizon-ai portal` để mở trang tạo key, hoặc `crizon-ai login --web`.
+> Chưa có key? Tạo tại [crizonshop.com/dashboard](https://crizonshop.com/dashboard?view=keys) (mục **API key**), hoặc gõ `crizon-ai portal`.
 
 ## Tính năng
 
@@ -40,7 +43,7 @@ crizon-ai tui
 
 ```bash
 crizon-ai                      # wizard 3 bước (ngôn ngữ → key → kiểu dùng) rồi vào chat
-crizon-ai login --key czn_...  # hoặc lưu key thủ công
+crizon-ai login --key czn_...  # lưu key thủ công (key sẽ nằm trong lịch sử shell — nên dùng wizard)
 crizon-ai models               # danh sách model khả dụng theo key
 crizon-ai ask "Tóm tắt giúp tôi đơn hàng #1024"
 crizon-ai chat                 # phiên chat dài, tự lưu lịch sử
