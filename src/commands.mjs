@@ -6,6 +6,8 @@ import readline from "node:readline";
 import { fileURLToPath } from "node:url";
 
 import { ApiError, CrizonClient } from "./client.mjs";
+import { runBrowserLogin } from "./browser-login.mjs";
+import { CodexConfigConflict, renderCodexBlocks } from "./codex-config.mjs";
 import { createComposer } from "./composer.mjs";
 import { homeDir, loadConfigFile, resolveConfig, saveConfigFile, updateConfigFile } from "./config.mjs";
 import { runDoctor } from "./doctor.mjs";
@@ -22,6 +24,7 @@ import {
   askLine,
   bandLine,
   colorEnabled,
+  confirm,
   createLineReader,
   createSpinner,
   inputHidden,
@@ -33,6 +36,7 @@ import {
 } from "./ui.mjs";
 import { c, maskKey, VERSION } from "./util.mjs";
 import { printWelcome } from "./welcome.mjs";
+import { promptApiKey } from "./wizard.mjs";
 
 export function defaultIo() {
   return {
@@ -127,6 +131,13 @@ export function saveRoles(env, roles) {
 
 export async function cmdLogin({ flags = {}, env = process.env, io = defaultIo(), deps = {} } = {}) {
   const key = String(flags.key || "").trim();
+  if (!key && flags.browser) {
+    const login = deps.browserLogin ?? runBrowserLogin;
+    const saved = await login({ env, io, open: deps.open ?? openUrl });
+    if (!saved) return 1;
+    reportReapplied(io, await reapplyConnectedHarnesses({ env, cfg: resolveConfig({ env }) }));
+    return 0;
+  }
   if (!key) {
     const url = portalKeysUrl(resolveConfig({ flags, env }).portalUrl);
     const open = deps.open ?? openUrl;
@@ -155,6 +166,8 @@ export async function cmdLogin({ flags = {}, env = process.env, io = defaultIo()
   }
   const path = saveConfigFile(next, env);
   io.out(t("login.saved", { path }));
+  // Key mới phải tới cả các app đã kết nối, nếu không chúng vẫn gọi bằng key cũ.
+  reportReapplied(io, await reapplyConnectedHarnesses({ env, cfg: resolveConfig({ flags: { "base-url": flags["base-url"] }, env }) }));
   if (failure) {
     io.out(t("login.unverified", { err: explainError(failure) }));
     return 1;
@@ -1055,7 +1068,7 @@ export async function cmdEnv({ flags = {}, env = process.env, io = defaultIo() }
 
 export function agentsStatusLine(env = process.env, flags = {}) {
   const profilePath = detectProfilePath(process.platform, env);
-  const shortNames = { claude: "Claude", codex: "Codex", opencode: "TUI Crizon" };
+  const shortNames = { claude: "Claude", codex: "Codex", opencode: "Crizon" };
   return Object.values(HARNESSES)
     .map((harness) => {
       const status = harnessStatus(env, harness.id, { profilePath });
@@ -1078,26 +1091,128 @@ async function probeAndReport(id, cfg, io, { quiet = false } = {}) {
   return probe;
 }
 
+function harnessExtra(id, cfg, env) {
+  return id === "tui"
+    ? { configPath: managedConfigFile(env, id), tuiConfigPath: managedTuiConfigFile(env, id), lang: cfg.lang || "vi" }
+    : {};
+}
+
+async function firstModel(cfg) {
+  try {
+    return (await modelIds(makeClient(cfg)))[0] || "";
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Ghi cấu hình cho một harness, không hỏi gì. Dùng chung cho `setup`, cho việc thay
+ * key/model (ghi lại vào mọi app đã kết nối) và cho trang `crizon-ai ui`.
+ */
+export async function applyHarness({ id, cfg, env = process.env, profilePath, noApply = false, markCurrent = true }) {
+  const harness = HARNESSES[id];
+  const result = { id, envFile: null, profile: null, configFile: null, files: [] };
+  if (harness.apply) {
+    result.configFile = harness.apply(cfg, { env, model: cfg.model || (await firstModel(cfg)) });
+  } else {
+    const extra = harnessExtra(id, cfg, env);
+    if (id === "tui") {
+      let models = [];
+      try {
+        models = await modelIds(makeClient(cfg));
+      } catch {
+        models = [];
+      }
+      mkdirSync(dirname(extra.configPath), { recursive: true });
+      const goalFile = managedGoalFile(env, id);
+      const goalPluginFile = managedGoalPluginFile(env, id);
+      const doctorFile = managedDoctorFile(env, id);
+      writeFileSync(extra.configPath, renderOpencodeConfig(cfg, models, { goalScript: goalFile, goalPlugin: goalPluginFile, doctorScript: doctorFile, configPath: extra.configPath }), { mode: 0o600 });
+      // Thương hiệu Crizon trong TUI Crizon (slot home_logo qua plugin chính thức).
+      writeFileSync(extra.tuiConfigPath, renderTuiConfig(id), { mode: 0o600 });
+      writeFileSync(managedBrandFile(env, id), brandPluginSource(), { mode: 0o600 });
+      // Goal loop: script trạng thái (.crizon/goal.json theo dự án) + plugin server (token/briefing).
+      writeFileSync(goalFile, goalScriptSource(), { mode: 0o600 });
+      writeFileSync(goalPluginFile, goalPluginSource(), { mode: 0o600 });
+      // Chẩn đoán /crizon (kiểu fcc-doctor) — chạy cục bộ, chỉ đọc.
+      writeFileSync(doctorFile, doctorScriptSource(), { mode: 0o600 });
+      result.files.push(extra.configPath, extra.tuiConfigPath);
+    }
+    result.envFile = managedEnvFile(env, id);
+    mkdirSync(dirname(result.envFile), { recursive: true });
+    writeFileSync(result.envFile, renderManagedEnv(id, cfg, extra), { mode: 0o600 });
+    if (!noApply) result.profile = applyProfileBlock(profilePath, id, cfg, extra);
+  }
+  const file = loadConfigFile(env);
+  const harnessConfigs = {
+    ...(file.harnessConfigs ?? {}),
+    [id]: {
+      connectedAt: new Date().toISOString(),
+      profilePath,
+      applied: Boolean(result.profile || result.configFile),
+      baseUrl: cfg.baseUrl,
+      model: cfg.model || "",
+    },
+  };
+  updateConfigFile({ ...(markCurrent ? { harness: id } : {}), harnessConfigs }, env);
+  return result;
+}
+
+/**
+ * Sau khi đổi key/model: ghi lại cấu hình cho các app CLI này đã kết nối (theo
+ * `harnessConfigs` trong file cấu hình của CLI — không quét file người dùng tự viết).
+ */
+export async function reapplyConnectedHarnesses({ env = process.env, cfg }) {
+  const file = loadConfigFile(env);
+  const results = [];
+  for (const [id, info] of Object.entries(file.harnessConfigs ?? {})) {
+    if (!HARNESSES[id]) continue;
+    const profilePath = info?.profilePath || detectProfilePath(process.platform, env);
+    if (!harnessStatus(env, id, { profilePath }).connected) continue;
+    try {
+      await applyHarness({ id, cfg, env, profilePath, noApply: info?.applied === false, markCurrent: false });
+      results.push({ id, ok: true });
+    } catch (err) {
+      results.push({ id, ok: false, error: err?.message || String(err) });
+    }
+  }
+  return results;
+}
+
+function reportReapplied(io, results) {
+  const ok = results.filter((row) => row.ok).map((row) => HARNESSES[row.id].name);
+  if (ok.length) io.out(t("login.reapplied", { names: ok.join(", ") }));
+  for (const row of results.filter((item) => !item.ok)) io.out(t("login.reapplyFailed", { name: HARNESSES[row.id].name, err: row.error }));
+}
+
 async function setupHarness({ id, cfg, flags = {}, env = process.env, io, uiFns, assumeConnect = false }) {
   const harness = HARNESSES[id];
   const profilePath = flags.profile ? String(flags.profile) : detectProfilePath(process.platform, env);
   const status = harnessStatus(env, id, { profilePath });
   const installed = commandExists(harness.command);
-  const extra = id === "tui"
-    ? { configPath: managedConfigFile(env, id), tuiConfigPath: managedTuiConfigFile(env, id), lang: cfg.lang || "vi" }
-    : {};
+  const extra = harnessExtra(id, cfg, env);
   const preview = () => {
     const rows = [`${t("setup.status")}: ${status.connected ? t("setup.statusOn") : t("setup.statusOff")}`];
     if (!installed) rows.push(t("setup.harnessMissing", { name: harness.name, hint: harness.hint }));
-    rows.push(t("setup.willWrite"));
-    for (const [key, value] of harness.env(cfg, extra)) rows.push(`  ${key} = ${maskEnvValue(key, value, cfg.apiKey)}`);
-    rows.push(`  ${profilePath}`);
+    if (harness.configFile) {
+      rows.push(t("setup.willWriteConfig"));
+      rows.push(`  ${harness.configFile(env)}`);
+    } else {
+      rows.push(t("setup.willWrite"));
+      for (const [key, value] of harness.env(cfg, extra)) rows.push(`  ${key} = ${maskEnvValue(key, value, cfg.apiKey)}`);
+      rows.push(`  ${profilePath}`);
+    }
     panel(io, t("setup.title", { name: harness.name }), rows);
   };
 
   if (flags.print) {
     preview();
-    io.out(renderEnvBlock(id, { ...cfg, apiKey: maskKey(cfg.apiKey) }, { shell: profileShell(profilePath), extra }));
+    if (id === "codex") {
+      const blocks = renderCodexBlocks({ ...cfg, apiKey: maskKey(cfg.apiKey) }, { model: cfg.model });
+      io.out(`${blocks.top}\n…\n${blocks.provider}`);
+    } else {
+      io.out(renderEnvBlock(id, { ...cfg, apiKey: maskKey(cfg.apiKey) }, { shell: profileShell(profilePath), extra }));
+    }
     return 0;
   }
 
@@ -1124,65 +1239,44 @@ async function setupHarness({ id, cfg, flags = {}, env = process.env, io, uiFns,
   const probe = await probeAndReport(id, cfg, io, { quiet: true });
   if (!probe.supported) io.out(describeProbe(probe, cfg));
 
-  if (id === "tui") {
-    let models = [];
-    try {
-      models = await modelIds(makeClient(cfg));
-    } catch {
-      models = [];
+  let result;
+  try {
+    result = await applyHarness({ id, cfg, env, profilePath, noApply: Boolean(flags["no-apply"]) });
+  } catch (err) {
+    if (err instanceof CodexConfigConflict) {
+      io.out(`${SYM.err} ${t("setup.codexConflict", { path: harness.configFile(env) })}`);
+      return 1;
     }
-    mkdirSync(dirname(extra.configPath), { recursive: true });
-    const goalFile = managedGoalFile(env, id);
-    const goalPluginFile = managedGoalPluginFile(env, id);
-    const doctorFile = managedDoctorFile(env, id);
-    writeFileSync(extra.configPath, renderOpencodeConfig(cfg, models, { goalScript: goalFile, goalPlugin: goalPluginFile, doctorScript: doctorFile, configPath: extra.configPath }), { mode: 0o600 });
-    if (!flags.json) io.out(t("setup.wroteConfig", { path: extra.configPath }));
-    // Thương hiệu Crizon trong TUI Crizon (slot home_logo qua plugin chính thức).
-    writeFileSync(extra.tuiConfigPath, renderTuiConfig(id), { mode: 0o600 });
-    writeFileSync(managedBrandFile(env, id), brandPluginSource(), { mode: 0o600 });
-    // Goal loop: script trạng thái (.crizon/goal.json theo dự án) + plugin server (token/briefing).
-    writeFileSync(goalFile, goalScriptSource(), { mode: 0o600 });
-    writeFileSync(goalPluginFile, goalPluginSource(), { mode: 0o600 });
-    // Chẩn đoán /crizon (kiểu fcc-doctor) — chạy cục bộ, chỉ đọc.
-    writeFileSync(doctorFile, doctorScriptSource(), { mode: 0o600 });
-    if (!flags.json) io.out(t("setup.wroteBrand", { path: extra.tuiConfigPath }));
+    throw err;
   }
 
-  const envFile = managedEnvFile(env, id);
-  mkdirSync(dirname(envFile), { recursive: true });
-  writeFileSync(envFile, renderManagedEnv(id, cfg, extra), { mode: 0o600 });
-  if (!flags.json) io.out(t("setup.wroteEnv", { path: envFile }));
-
-  const applied = flags["no-apply"] ? null : applyProfileBlock(profilePath, id, cfg, extra);
-  const file = loadConfigFile(env);
-  const harnessConfigs = {
-    ...(file.harnessConfigs ?? {}),
-    [id]: {
-      connectedAt: new Date().toISOString(),
-      profilePath,
-      applied: Boolean(applied),
-      baseUrl: cfg.baseUrl,
-      model: cfg.model || "",
-    },
-  };
-  updateConfigFile({ harness: id, harnessConfigs }, env);
-
-  if (applied && !flags.json) {
-    io.out(applied.backup
-      ? t("setup.appliedProfile", { path: applied.path, backup: applied.backup })
-      : t("setup.appliedProfileNew", { path: applied.path }));
-  }
-  if (!flags.json) io.out(t("setup.connected", { command: id === "tui" ? "crizon-ai tui" : harness.command }));
-  if (id === "tui" && !flags.json) {
-    io.out(t("setup.tuiHint"));
+  if (!flags.json) {
+    if (id === "tui") {
+      io.out(t("setup.wroteConfig", { path: extra.configPath }));
+      io.out(t("setup.wroteBrand", { path: extra.tuiConfigPath }));
+    }
+    if (result.configFile) {
+      io.out(t("setup.wroteCodex", { path: result.configFile.path }));
+      if (result.configFile.backup) io.out(t("setup.backup", { backup: result.configFile.backup }));
+    }
+    if (result.envFile) io.out(t("setup.wroteEnv", { path: result.envFile }));
+    if (result.profile) {
+      io.out(result.profile.backup
+        ? t("setup.appliedProfile", { path: result.profile.path, backup: result.profile.backup })
+        : t("setup.appliedProfileNew", { path: result.profile.path }));
+    }
+    // Codex đọc config.toml mỗi lần chạy: không cần mở terminal mới.
+    io.out(t(result.configFile ? "setup.connectedNow" : "setup.connected", { command: id === "tui" ? "crizon-ai tui" : harness.command }));
+    if (id === "tui") io.out(t("setup.tuiHint"));
   }
   if (flags.json) {
     io.out(JSON.stringify({
       ok: true,
       harness: id,
-      envFile,
+      envFile: result.envFile,
+      configFile: result.configFile?.path ?? null,
       profilePath,
-      applied: Boolean(applied),
+      applied: Boolean(result.profile || result.configFile),
       gatewaySupported: probe.supported,
       gatewayStatus: probe.status,
     }, null, 2));
@@ -1190,9 +1284,9 @@ async function setupHarness({ id, cfg, flags = {}, env = process.env, io, uiFns,
   return 0;
 }
 
-export async function disconnectHarness({ id, env = process.env, io, profilePath }) {
+export async function disconnectHarness({ id, env = process.env, io, profilePath, quiet = false }) {
   const harness = HARNESSES[id];
-  const removed = removeProfileBlock(profilePath, id);
+  const removed = harness.remove ? harness.remove({ env }) : removeProfileBlock(profilePath, id);
   cleanupHarness(env, id);
   const file = loadConfigFile(env);
   const harnessConfigs = { ...(file.harnessConfigs ?? {}) };
@@ -1201,17 +1295,44 @@ export async function disconnectHarness({ id, env = process.env, io, profilePath
   if (hadConfig || file.harness === id) {
     updateConfigFile({ ...(hadConfig ? { harnessConfigs } : {}), ...(file.harness === id ? { harness: "chat" } : {}) }, env);
   }
-  io.out(t("setup.disconnected", { name: harness.name }));
-  if (removed.removed) io.out(t("setup.removedFrom", { path: removed.path }));
+  if (!quiet) {
+    io.out(t("setup.disconnected", { name: harness.name }));
+    if (removed.removed) io.out(t("setup.removedFrom", { path: removed.path }));
+  }
   return 0;
 }
 
-export async function cmdSetup({ flags = {}, env = process.env, io = defaultIo(), ui = {} } = {}) {
-  const uiFns = { select, searchSelect, inputHidden, askLine, ...ui };
-  const cfg = resolveConfig({ flags, env });
+/**
+ * Chưa có key: cho chọn đăng nhập bằng trình duyệt (khuyên dùng) hoặc dán key.
+ * Trả true khi đã lưu được key.
+ */
+async function askForKey({ env, io, uiFns, deps = {} }) {
+  const method = await uiFns.select(io, [
+    { code: "browser", label: t("key.methodBrowser") },
+    { code: "paste", label: t("key.methodPaste") },
+  ], { title: t("key.methodTitle") });
+  if (!method) return false;
+  if (method.item.code === "browser") {
+    const login = deps.browserLogin ?? runBrowserLogin;
+    return Boolean(await login({ env, io, open: deps.open ?? openUrl }));
+  }
+  const entered = await promptApiKey({ cfg: resolveConfig({ env }), io, uiFns });
+  if (!entered) return false;
+  const path = saveConfigFile({ ...loadConfigFile(env), apiKey: entered.apiKey }, env);
+  io.out(t("login.saved", { path }));
+  return true;
+}
+
+export async function cmdSetup({ flags = {}, env = process.env, io = defaultIo(), ui = {}, deps = {} } = {}) {
+  const uiFns = { select, searchSelect, inputHidden, askLine, confirm, ...ui };
+  let cfg = resolveConfig({ flags, env });
   if (!cfg.apiKey) {
-    io.out(`${SYM.err} ${t("err.noKey")}`);
-    return 2;
+    if (!io.stdin?.isTTY) {
+      io.out(`${SYM.err} ${t("err.noKey")}`);
+      return 2;
+    }
+    if (!(await askForKey({ env, io, uiFns, deps }))) return 0;
+    cfg = resolveConfig({ flags, env });
   }
   let id = flags._?.[0];
   if (id !== undefined && !isHarnessId(id)) {

@@ -1,6 +1,6 @@
 import { t } from "./i18n.mjs";
 
-export const VERSION = "1.0.1";
+export const VERSION = "1.0.2";
 
 const useColor = Boolean(process.stdout.isTTY) && !process.env.NO_COLOR;
 const wrap = (code) => (s) => (useColor ? `\u001b[${code}m${s}\u001b[0m` : String(s));
@@ -22,7 +22,7 @@ export function maskKey(key) {
   return `${value.slice(0, 8)}…${value.slice(-4)}`;
 }
 
-const VALUE_FLAGS = new Set(["key", "base-url", "model", "system", "shell", "temperature", "max-tokens", "config", "session", "role", "lang", "limit", "profile", "logo"]);
+const VALUE_FLAGS = new Set(["key", "base-url", "model", "system", "shell", "temperature", "max-tokens", "config", "session", "role", "lang", "limit", "profile", "logo", "port"]);
 
 /**
  * Parser argv tối giản: --flag value, --flag=value, -h, -v, --no-*.

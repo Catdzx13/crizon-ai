@@ -22,7 +22,7 @@ npm i -g github:Catdzx13/crizon-ai
 # Lần đầu: chọn ngôn ngữ rồi dán API key (nhập ẩn, không lưu vào lịch sử shell)
 crizon-ai
 
-# Mở TUI Crizon (tự tải binary theo hệ điều hành lần đầu)
+# Mở Crizon (tự tải binary theo hệ điều hành lần đầu)
 crizon-ai tui
 ```
 
@@ -30,12 +30,12 @@ crizon-ai tui
 
 ## Tính năng
 
-- **TUI Crizon** — giao diện chat/lập trình trong terminal, việt hoá toàn bộ, logo & thương hiệu Crizon.
+- **Crizon** — giao diện chat/lập trình trong terminal, việt hoá toàn bộ, logo & thương hiệu Crizon.
 - **Goal loop `/goal`** — giao việc theo mục tiêu: kế hoạch + tiêu chí nghiệm thu, todo ngay trong phiên, ngân sách thời gian/token/bước, tự chạy lệnh kiểm chứng.
 - **Recap `/recap`** — quay lại sau vẫn nắm ngay tiến độ: tóm tắt 40–60 từ (mục tiêu · đã xong · blocker · việc kế tiếp), không ghi vào hội thoại.
 - **Mức tư duy theo model** — `tắt · nhanh · cân-bằng · sâu` (đổi nhanh bằng `ctrl+t`).
 - **1 key dùng mọi model** — không khoá model theo key; chọn model ngay trong CLI (`crizon-ai models`, `/model`, `--model <id>`).
-- **1 key dùng cho nhiều CLI** — kết nối Claude Code, Codex, TUI Crizon, Aider, Qwen bằng cùng một API key Crizon.
+- **1 key dùng cho nhiều CLI** — kết nối Claude Code, Codex, Crizon, Aider, Qwen bằng cùng một API key Crizon.
 - **CLI nhẹ (zero-dep)** — `chat`, `ask`, `models`, `logs`, `roles`, wizard lần đầu, i18n vi/en.
 - **Tự tải binary** — `crizon-ai tui` tải bản đúng hệ điều hành từ GitHub Releases vào `~/.crizon-ai/bin`.
 
@@ -54,7 +54,7 @@ crizon-ai chat                 # phiên chat dài, tự lưu lịch sử
 | Lệnh | Mô tả |
 |---|---|
 | `crizon-ai` | Vào chat ngay (lần đầu chạy wizard) |
-| `crizon-ai tui` | Mở **TUI Crizon** (tự tải binary lần đầu) |
+| `crizon-ai tui` | Mở **Crizon** trong terminal (tự tải binary lần đầu) |
 | `crizon-ai login [--key czn_…] [--web]` | Lưu API key + kiểm tra kết nối |
 | `crizon-ai portal` | Mở trang tạo API key trên portal |
 | `crizon-ai models [--json]` | Danh sách model theo key |
@@ -88,7 +88,7 @@ crizon-ai ask "…" --model crizon/gpt-standard
 
 Trong chat: `/model` · Trong TUI: `ctrl+x m` (hoặc `/variants` để đổi mức tư duy).
 
-## TUI Crizon
+## Crizon trong terminal
 
 - Khởi động: `crizon-ai tui` — mở trong thư mục dự án hiện tại.
 - Mục tiêu: `/goal <mục tiêu>` · `/goal pause|resume|complete|clear` · `/goal budget <phút>`.
@@ -104,7 +104,7 @@ crizon-ai setup claude    # Claude Code
 crizon-ai setup codex     # Codex
 crizon-ai setup aider     # Aider
 crizon-ai setup qwen      # Qwen Code
-crizon-ai setup tui       # TUI Crizon
+crizon-ai setup tui       # Crizon
 ```
 
 Mỗi lệnh ghi env riêng (quyền 600) + khối marker vào shell profile (có backup), không đụng cấu hình sẵn có.

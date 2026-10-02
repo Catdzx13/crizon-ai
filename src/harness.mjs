@@ -1,10 +1,11 @@
-/** Kết nối harness (Claude Code / Codex) — ghi env có marker, backup, probe gateway. */
+/** Kết nối harness (Claude Code / Codex…) — ghi env có marker hoặc file config riêng (Codex), backup, probe gateway. */
 import { spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { applyCodexConfig, codexConfigPath, hasCodexConfig, removeCodexConfig } from "./codex-config.mjs";
 import { homeDir } from "./config.mjs";
 
 const moduleDir = dirname(fileURLToPath(import.meta.url));
@@ -34,20 +35,22 @@ export const HARNESSES = {
     name: "Codex",
     command: "codex",
     hint: "npm i -g @openai/codex",
-    description: "Codex (model qua API Crizon)",
-    env(cfg) {
-      const rows = [
-        ["OPENAI_BASE_URL", String(cfg.baseUrl || "").replace(/\/+$/, "")],
-        ["OPENAI_API_KEY", cfg.apiKey],
-      ];
-      return rows;
+    description: "Codex (CLI + app/IDE, model qua API Crizon)",
+    // Codex ≥ 0.15x bỏ qua OPENAI_BASE_URL/OPENAI_API_KEY: cấu hình nằm trong config.toml.
+    env() {
+      return [];
     },
+    configFile: (env) => codexConfigPath(env),
+    apply: (cfg, { env, model }) => applyCodexConfig(cfg, { env, model }),
+    remove: ({ env }) => removeCodexConfig({ env }),
+    isConnected: (env) => hasCodexConfig(env),
   },
   aider: {
     id: "aider",
     name: "Aider",
     command: "aider",
-    hint: "python -m pip install aider-install && aider-install",
+    // `;` chạy được cả bash lẫn PowerShell 5.1 (không có `&&`).
+    hint: "python -m pip install aider-install; aider-install",
     description: "Aider (pair-programming trong terminal, model qua API Crizon)",
     env(cfg) {
       const rows = [
@@ -75,10 +78,10 @@ export const HARNESSES = {
   },
   tui: {
     id: "tui",
-    name: "TUI Crizon",
+    name: "Crizon",
     command: "crizon-ai",
     hint: "crizon-ai tui (tự tải binary)",
-    description: "TUI Crizon (chat/code trong terminal, model qua API Crizon)",
+    description: "Crizon (chat/code trong terminal, model qua API Crizon)",
     env(cfg, extra = {}) {
       const rows = [];
       if (extra.configPath) rows.push(["OPENCODE_CONFIG", extra.configPath]);
@@ -354,6 +357,11 @@ export function removeProfileBlock(profilePath, harnessId) {
 }
 
 export function harnessStatus(env, harnessId, { profilePath } = {}) {
+  const harness = HARNESSES[harnessId];
+  if (harness?.isConnected) {
+    const config = harness.isConnected(env);
+    return { connected: config, managed: false, profile: false, config };
+  }
   const managed = existsSync(managedEnvFile(env, harnessId));
   const profile = profilePath ? hasProfileBlock(profilePath, harnessId) : false;
   return { connected: managed || profile, managed, profile };

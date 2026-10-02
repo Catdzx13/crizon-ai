@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="referrer" content="no-referrer">
+  <title>Crizon AI</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="stylesheet" href="/app.css">
+  <script src="/brands.js" defer></script>
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="window">
+    <aside class="sidebar">
+      <div class="brand">
+        <img class="app-icon app-icon--img" src="/crizon.png" alt="" aria-hidden="true">
+        <div class="brand-text">
+          <strong>Crizon AI</strong>
+          <small id="brand-sub"></small>
+        </div>
+      </div>
+      <nav id="nav" class="nav"></nav>
+      <div class="sidebar-foot">
+        <span id="version" class="muted"></span>
+        <button id="quit" type="button" class="plain plain--danger"></button>
+      </div>
+    </aside>
+    <main id="pane" class="pane" tabindex="-1"></main>
+  </div>
+  <dialog id="sheet" class="sheet" aria-labelledby="sheet-title"></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <noscript><p class="noscript">Crizon AI cần JavaScript để chạy trình quản lý.</p></noscript>
+</body>
+</html>

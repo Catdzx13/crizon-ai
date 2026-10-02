@@ -11,7 +11,8 @@ function helpText() {
     "",
     t("help.usage"),
     `  crizon-ai                                  ${t("help.cmdChat")}`,
-    `  crizon-ai login [--key czn_...] [--web]   ${t("help.cmdLogin")}`,
+    `  crizon-ai login [--key czn_...] [--browser] [--web]  ${t("help.cmdLogin")}`,
+    `  crizon-ai ui [--port N] [--no-open]        ${t("help.cmdUi")}`,
     `  crizon-ai portal                           ${t("help.cmdPortal")}`,
     `  crizon-ai tui [--bin <path>]               ${t("help.cmdTui")}`,
     `  crizon-ai models                           ${t("help.cmdModels")}`,
@@ -77,6 +78,10 @@ export async function main(argv = []) {
         return await cmd.cmdLogin({ flags, io });
       case "portal":
         return await cmd.cmdPortal({ flags, io });
+      case "ui": {
+        const { cmdUi } = await import("./ui-server.mjs");
+        return await cmdUi({ flags, io });
+      }
       case "tui":
         return await cmd.cmdTui({ flags, io });
       case "logout":

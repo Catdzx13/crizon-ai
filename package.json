@@ -1,7 +1,7 @@
 {
   "name": "crizon-ai",
-  "version": "1.0.1",
-  "description": "Crizon AI CLI — trợ lý AI CrizonShop trong terminal + TUI Crizon",
+  "version": "1.0.2",
+  "description": "Crizon AI CLI — trợ lý AI CrizonShop trong terminal + trình quản lý trên máy (bật/tắt app, MCP, skill)",
   "type": "module",
   "bin": {
     "crizon-ai": "bin/crizon-ai.mjs"

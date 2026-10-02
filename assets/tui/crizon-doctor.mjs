@@ -156,7 +156,7 @@ function renderPage(items, meta) {
   <ul>
         ${rendered}
   </ul>
-  <footer>Chạy lại <b>/crizon</b> trong TUI Crizon để cập nhật trang này.</footer>
+  <footer>Chạy lại <b>/crizon</b> trong Crizon để cập nhật trang này.</footer>
 </body>
 </html>
 `;

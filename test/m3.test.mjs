@@ -78,6 +78,7 @@ function tempEnv(extra = {}) {
     CRIZON_CONFIG_PATH: join(dir, "config.json"),
     CRIZON_HOME: join(dir, "home"),
     CRIZON_PROFILE_PATH: join(dir, "profile.ps1"),
+    CODEX_HOME: join(dir, "codex"),
   };
   delete env.CRIZON_API_KEY;
   delete env.CRIZON_BASE_URL;
@@ -93,10 +94,12 @@ test("harness: gatewayOrigin + env lines cho claude/codex", () => {
   assert.deepEqual(claude[0], ["ANTHROPIC_BASE_URL", "https://gw.test"]);
   assert.deepEqual(claude[1], ["ANTHROPIC_AUTH_TOKEN", "czn_x"]);
   assert.deepEqual(claude[2], ["ANTHROPIC_MODEL", "deepseek-chat"]);
-  const codex = HARNESSES.codex.env({ baseUrl: "https://gw.test/v1", apiKey: "czn_x", model: "" });
-  assert.deepEqual(codex[0], ["OPENAI_BASE_URL", "https://gw.test/v1"]);
-  assert.deepEqual(codex[1], ["OPENAI_API_KEY", "czn_x"]);
-  assert.equal(codex.length, 2);
+  // Codex ≥ 0.15x bỏ qua OPENAI_BASE_URL/OPENAI_API_KEY → cấu hình nằm trong config.toml, không ghi env.
+  assert.deepEqual(HARNESSES.codex.env({ baseUrl: "https://gw.test/v1", apiKey: "czn_x", model: "" }), []);
+  assert.equal(typeof HARNESSES.codex.apply, "function");
+  const qwen = HARNESSES.qwen.env({ baseUrl: "https://gw.test/v1", apiKey: "czn_x", model: "" });
+  assert.deepEqual(qwen[0], ["OPENAI_BASE_URL", "https://gw.test/v1"]);
+  assert.deepEqual(qwen[1], ["OPENAI_API_KEY", "czn_x"]);
 });
 
 test("harness: renderManagedEnv + renderEnvBlock theo shell", () => {
@@ -107,7 +110,7 @@ test("harness: renderManagedEnv + renderEnvBlock theo shell", () => {
   assert.match(bash, /^# >>> crizon-ai \(claude\) >>>/m);
   assert.match(bash, /export ANTHROPIC_BASE_URL="https:\/\/gw\.test"/);
   assert.match(bash, /# <<< crizon-ai <<</);
-  const ps = renderEnvBlock("codex", { baseUrl: "https://gw.test/v1", apiKey: "czn_x", model: "" }, { shell: "powershell" });
+  const ps = renderEnvBlock("qwen", { baseUrl: "https://gw.test/v1", apiKey: "czn_x", model: "" }, { shell: "powershell" });
   assert.match(ps, /\$env:OPENAI_API_KEY = "czn_x"/);
   assert.equal(profileShell("x.ps1"), "powershell");
   assert.equal(profileShell("x/.bashrc"), "bash");
@@ -142,14 +145,14 @@ test("harness: apply → replace (có backup, không trùng khối) → remove",
 test("harness: apply vào file chưa tồn tại + detectProfilePath/status", () => {
   const { env, dir } = tempEnv();
   const profile = join(dir, "nested", "profile.sh");
-  applyProfileBlock(profile, "codex", { baseUrl: "https://gw.test/v1", apiKey: "czn_x", model: "" });
+  applyProfileBlock(profile, "qwen", { baseUrl: "https://gw.test/v1", apiKey: "czn_x", model: "" });
   assert.ok(existsSync(profile));
   assert.equal(detectProfilePath("win32", env), env.CRIZON_PROFILE_PATH);
-  const status = harnessStatus(env, "codex", { profilePath: profile });
+  const status = harnessStatus(env, "qwen", { profilePath: profile });
   assert.equal(status.connected, true);
   assert.equal(status.profile, true);
   assert.equal(status.managed, false);
-  assert.ok(managedEnvFile(env, "codex").startsWith(String(env.CRIZON_HOME)));
+  assert.ok(managedEnvFile(env, "qwen").startsWith(String(env.CRIZON_HOME)));
 });
 
 test("probeCompat: 204 = hỗ trợ, 404 = chưa, cổng chết = không kết nối", async (t) => {

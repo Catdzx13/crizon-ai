@@ -82,7 +82,7 @@ test("tui: mở binary với OPENCODE_CONFIG/TUI_CONFIG + chuyển tiếp tham s
   assert.equal(calls[0].opts.env.OPENCODE_CONFIG, configPath);
   assert.equal(calls[0].opts.env.OPENCODE_TUI_CONFIG, tuiConfigPath);
   assert.equal(calls[0].opts.stdio, "inherit");
-  assert.match(lines.join("\n"), /Mở TUI|Launching the Vietnamese/);
+  assert.match(lines.join("\n"), /Mở Crizon|Launching Crizon/);
 });
 
 test("tuiBinaryCandidates: ưu tiên --bin > env > package", () => {
@@ -201,5 +201,5 @@ test("tui: --no-download thì không tải, báo thiếu binary (exit 2)", async
   });
   assert.equal(code, 2);
   assert.equal(downloads, 0);
-  assert.match(lines.join("\n"), /Chưa có TUI|not found/);
+  assert.match(lines.join("\n"), /Chưa có Crizon|not found/);
 });

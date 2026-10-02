@@ -6,6 +6,42 @@ import { portalKeysUrl } from "./open-url.mjs";
 import * as uiReal from "./ui.mjs";
 
 /**
+ * Hỏi API key (nhập ẩn) và kiểm tra với Gateway trước khi nhận.
+ * Trả { apiKey, savedUnverified } hoặc null khi khách huỷ. Không tự lưu.
+ */
+export async function promptApiKey({ cfg, io, uiFns = uiReal }) {
+  uiReal.panel(io, t("wizard.keyTitle"));
+  io.out(t("wizard.keyPortal", { url: portalKeysUrl(cfg.portalUrl) }));
+  for (;;) {
+    const entered = await uiFns.inputHidden(io, { prompt: t("wizard.keyPrompt") });
+    if (entered === null) return null; // Ctrl+C
+    const apiKey = String(entered || "").trim();
+    if (!apiKey) {
+      io.out(t("wizard.keyEmpty"));
+      continue;
+    }
+    io.out(t("wizard.keyChecking"));
+    try {
+      const data = await new CrizonClient({ baseUrl: cfg.baseUrl, apiKey }).models();
+      const count = Array.isArray(data?.data) ? data.data.length : 0;
+      io.out(t("wizard.keyOk", { count }));
+      return { apiKey, savedUnverified: false };
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 0) {
+        io.out(t("wizard.keyUnreachable", { base: cfg.baseUrl, code: err.code }));
+        const retry = await uiFns.confirm(io, { prompt: t("wizard.keyRetry"), defaultYes: false });
+        if (!retry) return { apiKey, savedUnverified: true };
+      } else {
+        const code = err instanceof ApiError ? `${err.status} ${err.code}` : String(err?.message || err);
+        io.out(t("wizard.keyInvalid", { code }));
+        const retry = await uiFns.confirm(io, { prompt: t("wizard.keyRetry"), defaultYes: true });
+        if (!retry) return null;
+      }
+    }
+  }
+}
+
+/**
  * @param {object} opts
  * @param {object} opts.env - biến môi trường (test truyền env giả)
  * @param {object} opts.io  - { out, write, err, stdin, stdout }
@@ -20,40 +56,9 @@ export async function runWizard({ env = process.env, io, uiFns = uiReal } = {}) 
   setLang(lang);
 
   // 2) key
-  let apiKey = "";
-  let savedUnverified = false;
-  uiReal.panel(io, t("wizard.keyTitle"));
-  io.out(t("wizard.keyPortal", { url: portalKeysUrl(cfg.portalUrl) }));
-  for (;;) {
-    const entered = await uiFns.inputHidden(io, { prompt: t("wizard.keyPrompt") });
-    if (entered === null) return null; // Ctrl+C
-    apiKey = String(entered || "").trim();
-    if (!apiKey) {
-      io.out(t("wizard.keyEmpty"));
-      continue;
-    }
-    io.out(t("wizard.keyChecking"));
-    try {
-      const data = await new CrizonClient({ baseUrl: cfg.baseUrl, apiKey }).models();
-      const count = Array.isArray(data?.data) ? data.data.length : 0;
-      io.out(t("wizard.keyOk", { count }));
-      break;
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 0) {
-        io.out(t("wizard.keyUnreachable", { base: cfg.baseUrl, code: err.code }));
-        const retry = await uiFns.confirm(io, { prompt: t("wizard.keyRetry"), defaultYes: false });
-        if (!retry) {
-          savedUnverified = true;
-          break;
-        }
-      } else {
-        const code = err instanceof ApiError ? `${err.status} ${err.code}` : String(err?.message || err);
-        io.out(t("wizard.keyInvalid", { code }));
-        const retry = await uiFns.confirm(io, { prompt: t("wizard.keyRetry"), defaultYes: true });
-        if (!retry) return null;
-      }
-    }
-  }
+  const entered = await promptApiKey({ cfg, io, uiFns });
+  if (!entered) return null;
+  const { apiKey, savedUnverified } = entered;
 
   // 3) kiểu dùng
   const modes = [
@@ -70,6 +75,6 @@ export async function runWizard({ env = process.env, io, uiFns = uiReal } = {}) 
   io.out(t("wizard.saved", { path }));
   if (savedUnverified) io.out(t("login.unverified", { err: t("err.unreachableMsg", { base: cfg.baseUrl }) }));
   if (harness === "chat") io.out(t("wizard.done"));
-  else io.out(t("wizard.modePending", { harness: { claude: "Claude Code", codex: "Codex", tui: "TUI Crizon" }[harness] ?? harness }));
+  else io.out(t("wizard.modePending", { harness: { claude: "Claude Code", codex: "Codex", tui: "Crizon" }[harness] ?? harness }));
   return { lang, apiKey, harness };
 }
